@@ -1,100 +1,210 @@
-"use client";
+import Link from "next/link"
+import { SiteHeader } from "@/components/site-header"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
-import thirdwebIcon from "@public/thirdweb.svg";
-import Image from "next/image";
-import { ConnectButton } from "thirdweb/react";
-import { client } from "./client";
-
-export default function Home() {
+export default function Page() {
   return (
-    <main className="p-4 pb-10 min-h-[100vh] flex items-center justify-center container max-w-screen-lg mx-auto">
-      <div className="py-20">
-        <Header />
-
-        <div className="flex justify-center mb-20">
-          <ConnectButton
-            client={client}
-            appMetadata={{
-              name: "Example App",
-              url: "https://example.com",
-            }}
-          />
+    <main className="min-h-screen bg-white text-black">
+      <SiteHeader />
+      <section className="mx-auto max-w-6xl px-4 py-12">
+        <div className="grid items-center gap-8 md:grid-cols-2">
+          <div>
+            <h1 className="a-slide-up text-pretty text-4xl font-semibold leading-tight">
+              Borrow stablecoins without selling your crypto.
+            </h1>
+            <p className="a-slide-up mt-4 text-neutral-700" style={{ animationDelay: "80ms" }}>
+              Secure, smart contract-enforced lending on Aegis. Collateralize assets, borrow USDC, and build your
+              on-chain credit score.
+            </p>
+            <Alert className="mt-6">
+              <AlertTitle className="font-bold">Important Risk Notice</AlertTitle>
+              <AlertDescription className="mt-2">
+                Please be aware of the risks associated with borrowing stablecoins. Ensure you understand the terms and
+                conditions before proceeding.
+              </AlertDescription>
+            </Alert>
+            <div className="a-slide-up mt-6 flex gap-3" style={{ animationDelay: "140ms" }}>
+              <Link href="/dashboard">
+                <Button className="bg-black text-white hover:bg-neutral-900">Open Dashboard</Button>
+              </Link>
+              <Link href="/borrow">
+                <Button variant="outline" className="border-neutral-300 bg-white text-black">
+                  Start Borrowing
+                </Button>
+              </Link>
+            </div>
+            <Alert className="mt-6 border-neutral-300 bg-white">
+              <AlertTitle className="font-semibold">Important</AlertTitle>
+              <AlertDescription className="text-sm">
+                Borrowing against volatile collateral can lead to partial liquidation if LTV exceeds the threshold.
+                Review terms and fees before confirming any transaction.
+              </AlertDescription>
+            </Alert>
+            <ul className="a-slide-up mt-8 grid gap-2 text-sm text-neutral-700" style={{ animationDelay: "180ms" }}>
+              <li>• Fast wallet connection & onboarding</li>
+              <li>• Real-time collateral valuation (USD)</li>
+              <li>• Partial liquidation protection and alerts</li>
+              <li>• Dynamic credit score boosts with timely repayments</li>
+            </ul>
+          </div>
+          <div>
+            <Card className="a-slide-up border-neutral-200 bg-white" style={{ animationDelay: "100ms" }}>
+              <CardContent className="p-6">
+                <div className="grid gap-3">
+                  <div className="card-hover rounded-md border border-neutral-300 p-4 focus-ring" tabIndex={0}>
+                    <div className="text-sm text-neutral-600">Step 1</div>
+                    <div className="mt-1 font-medium">Connect Wallet</div>
+                  </div>
+                  <div
+                    className="card-hover rounded-md border border-neutral-300 p-4 focus-ring"
+                    tabIndex={0}
+                    style={{ transitionDelay: "20ms" }}
+                  >
+                    <div className="text-sm text-neutral-600">Step 2</div>
+                    <div className="mt-1 font-medium">Choose Collateral & Amount</div>
+                  </div>
+                  <div
+                    className="card-hover rounded-md border border-neutral-300 p-4 focus-ring"
+                    tabIndex={0}
+                    style={{ transitionDelay: "40ms" }}
+                  >
+                    <div className="text-sm text-neutral-600">Step 3</div>
+                    <div className="mt-1 font-medium">Review Terms & Borrow USDC</div>
+                  </div>
+                  <div
+                    className="card-hover rounded-md border border-neutral-300 p-4 focus-ring"
+                    tabIndex={0}
+                    style={{ transitionDelay: "60ms" }}
+                  >
+                    <div className="text-sm text-neutral-600">Step 4</div>
+                    <div className="mt-1 font-medium">Manage, Repay, Build Credit</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <p className="mt-3 text-center text-xs text-neutral-600">
+              High-contrast, readable in low light and grayscale.
+            </p>
+          </div>
         </div>
+      </section>
 
-        <ThirdwebResources />
-      </div>
+      <section className="bg-neutral-50 py-16">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="text-center mb-12">
+            <h2 className="a-slide-up text-3xl font-semibold text-black">Why Aegis is Different</h2>
+            <p className="a-slide-up mt-4 text-neutral-700 max-w-2xl mx-auto" style={{ animationDelay: "80ms" }}>
+              Rethinking crypto lending with borrower-centric features that current dApps lack
+            </p>
+          </div>
+
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            <Card className="a-slide-up border-neutral-200 bg-white" style={{ animationDelay: "100ms" }}>
+              <CardContent className="p-6">
+                <div className="mb-4">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                    <div className="w-6 h-6 bg-blue-600 rounded"></div>
+                  </div>
+                  <h3 className="font-semibold text-lg">Dual Threshold System</h3>
+                </div>
+                <p className="text-sm text-neutral-700 mb-4">
+                  Set your own notification threshold to get early alerts before protocol liquidation kicks in.
+                </p>
+                <div className="text-xs text-neutral-600">
+                  <span className="text-red-600">❌ Others:</span> Rigid liquidations with no warning
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="a-slide-up border-neutral-200 bg-white" style={{ animationDelay: "140ms" }}>
+              <CardContent className="p-6">
+                <div className="mb-4">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                    <div className="w-6 h-6 bg-blue-600 rounded"></div>
+                  </div>
+                  <h3 className="font-semibold text-lg">Smart Notifications</h3>
+                </div>
+                <p className="text-sm text-neutral-700 mb-4">
+                  Real-time alerts when collateral value drops, preventing surprise liquidations.
+                </p>
+                <div className="text-xs text-neutral-600">
+                  <span className="text-red-600">❌ Others:</span> No early warning system
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="a-slide-up border-neutral-200 bg-white" style={{ animationDelay: "180ms" }}>
+              <CardContent className="p-6">
+                <div className="mb-4">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                    <div className="w-6 h-6 bg-blue-600 rounded"></div>
+                  </div>
+                  <h3 className="font-semibold text-lg">Credit Score System</h3>
+                </div>
+                <p className="text-sm text-neutral-700 mb-4">
+                  Build on-chain reputation for better LTV ratios and lower interest rates over time.
+                </p>
+                <div className="text-xs text-neutral-600">
+                  <span className="text-red-600">❌ Others:</span> No reputation or reward system
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="a-slide-up border-neutral-200 bg-white" style={{ animationDelay: "220ms" }}>
+              <CardContent className="p-6">
+                <div className="mb-4">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                    <div className="w-6 h-6 bg-blue-600 rounded"></div>
+                  </div>
+                  <h3 className="font-semibold text-lg">Partial Liquidation</h3>
+                </div>
+                <p className="text-sm text-neutral-700 mb-4">
+                  Only liquidate the minimum required amount, not your entire collateral position.
+                </p>
+                <div className="text-xs text-neutral-600">
+                  <span className="text-red-600">❌ Others:</span> Aggressive full liquidations
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="a-slide-up border-neutral-200 bg-white" style={{ animationDelay: "260ms" }}>
+              <CardContent className="p-6">
+                <div className="mb-4">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                    <div className="w-6 h-6 bg-blue-600 rounded"></div>
+                  </div>
+                  <h3 className="font-semibold text-lg">Non-intrusive Custody</h3>
+                </div>
+                <p className="text-sm text-neutral-700 mb-4">
+                  Your crypto stays in your wallet with smart contract control, not pooled away.
+                </p>
+                <div className="text-xs text-neutral-600">
+                  <span className="text-red-600">❌ Others:</span> Assets locked in protocol pools
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="a-slide-up border-neutral-200 bg-white" style={{ animationDelay: "300ms" }}>
+              <CardContent className="p-6">
+                <div className="mb-4">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                    <div className="w-6 h-6 bg-blue-600 rounded"></div>
+                  </div>
+                  <h3 className="font-semibold text-lg">Somnia Network</h3>
+                </div>
+                <p className="text-sm text-neutral-700 mb-4">
+                  High TPS blockchain ensures smooth transactions without congestion or high gas fees.
+                </p>
+                <div className="text-xs text-neutral-600">
+                  <span className="text-red-600">❌ Others:</span> High gas fees and network congestion
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
     </main>
-  );
-}
-
-function Header() {
-  return (
-    <header className="flex flex-col items-center mb-20 md:mb-20">
-      <Image
-        src={thirdwebIcon}
-        alt=""
-        className="size-[150px] md:size-[150px]"
-        style={{
-          filter: "drop-shadow(0px 0px 24px #a726a9a8)",
-        }}
-      />
-
-      <h1 className="text-2xl md:text-6xl font-semibold md:font-bold tracking-tighter mb-6 text-zinc-100">
-        thirdweb SDK
-        <span className="text-zinc-300 inline-block mx-1"> + </span>
-        <span className="inline-block -skew-x-6 text-blue-500"> Next.js </span>
-      </h1>
-
-      <p className="text-zinc-300 text-base">
-        Read the{" "}
-        <code className="bg-zinc-800 text-zinc-300 px-2 rounded py-1 text-sm mx-1">
-          README.md
-        </code>{" "}
-        file to get started.
-      </p>
-    </header>
-  );
-}
-
-function ThirdwebResources() {
-  return (
-    <div className="grid gap-4 lg:grid-cols-3 justify-center">
-      <ArticleCard
-        title="thirdweb SDK Docs"
-        href="https://portal.thirdweb.com/typescript/v5"
-        description="thirdweb TypeScript SDK documentation"
-      />
-
-      <ArticleCard
-        title="Components and Hooks"
-        href="https://portal.thirdweb.com/typescript/v5/react"
-        description="Learn about the thirdweb React components and hooks in thirdweb SDK"
-      />
-
-      <ArticleCard
-        title="thirdweb Dashboard"
-        href="https://thirdweb.com/dashboard"
-        description="Deploy, configure, and manage your smart contracts from the dashboard."
-      />
-    </div>
-  );
-}
-
-function ArticleCard(props: {
-  title: string;
-  href: string;
-  description: string;
-}) {
-  return (
-    <a
-      href={props.href + "?utm_source=next-template"}
-      target="_blank"
-      className="flex flex-col border border-zinc-800 p-4 rounded-lg hover:bg-zinc-900 transition-colors hover:border-zinc-700"
-    >
-      <article>
-        <h2 className="text-lg font-semibold mb-2">{props.title}</h2>
-        <p className="text-sm text-zinc-400">{props.description}</p>
-      </article>
-    </a>
-  );
+  )
 }
