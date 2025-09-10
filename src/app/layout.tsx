@@ -4,6 +4,7 @@ import { Open_Sans, Work_Sans } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
 import { SiteFooter } from "@/components/site-footer"
+import {ThirdwebProvider} from "thirdweb/react"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -32,13 +33,15 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${openSans.variable} ${workSans.variable} antialiased`}>
       <body className="font-sans">
-        <div className="min-h-screen flex flex-col">
-          <div className="flex-1">
-            <Suspense fallback={null}>{children}</Suspense>
+        <ThirdwebProvider>
+          <div className="min-h-screen flex flex-col">
+            <div className="flex-1">
+              <Suspense fallback={null}>{children}</Suspense>
+            </div>
+            <SiteFooter />
           </div>
-          <SiteFooter />
-        </div>
-        <Analytics />
+          <Analytics />
+        </ThirdwebProvider>
       </body>
     </html>
   )

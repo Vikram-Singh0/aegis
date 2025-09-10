@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
 import { usePathname } from "next/navigation" // get current path to style active link
+import WalletConnection from "@/app/walletConnection"
 
 const links = [
   { href: "/dashboard", label: "Dashboard" },
@@ -86,12 +87,13 @@ export function SiteHeader({ className }: { className?: string }) {
               </Button>
             </>
           ) : (
-            <Button
-              className="rounded-full bg-black text-white hover:bg-neutral-900 motion-safe:transition-colors motion-safe:duration-200 dark:bg-white dark:text-black dark:hover:bg-neutral-200"
-              onClick={() => setConnected(true)}
-            >
-              Connect Wallet
-            </Button>
+            <WalletConnection/>
+            // <Button
+            //   className="rounded-full bg-black text-white hover:bg-neutral-900 motion-safe:transition-colors motion-safe:duration-200 dark:bg-white dark:text-black dark:hover:bg-neutral-200"
+            //   onClick={() => setConnected(true)}
+            // >
+            //   Connect Wallet
+            // </Button>
           )}
         </div>
       </div>

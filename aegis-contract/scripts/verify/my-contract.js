@@ -1,7 +1,7 @@
 const hre = require("hardhat");
 
 // to run the script:
-//      npx hardhat run scripts/verify/my-contract.js --network zkSyncSepoliaTestnet
+//      npx hardhat run scripts/verify/my-contract.js --network somnia
 
 async function main() {
   const contractAddress = "<YOUR CONTRACT ADDRESS>"; // TODO: contract address
