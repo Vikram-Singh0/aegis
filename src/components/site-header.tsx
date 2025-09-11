@@ -27,8 +27,8 @@ export function SiteHeader({ className }: { className?: string }) {
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 w-full border-b border-neutral-200/70 bg-white/70 backdrop-blur-md supports-[backdrop-filter]:bg-white/60 shadow-sm",
-        "dark:border-neutral-800 dark:bg-black/50 supports-[backdrop-filter]:dark:bg-black/40",
+        "sticky top-0 z-50 w-full border-b border-neutral-200/70 bg-white/60 backdrop-blur-xl supports-[backdrop-filter]:bg-white/50 shadow-sm",
+        "dark:border-neutral-800 dark:bg-black/40 supports-[backdrop-filter]:dark:bg-black/30",
         className,
       )}
     >
@@ -61,7 +61,7 @@ export function SiteHeader({ className }: { className?: string }) {
                   "motion-safe:transition-colors motion-safe:duration-200 hover:text-black dark:hover:text-white",
                   // animated underline
                   "after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-0 after:h-0.5 after:w-0",
-                  "after:bg-blue-600 motion-safe:after:transition-all motion-safe:after:duration-300 hover:after:w-3/5",
+                  "after:bg-blue-600/80 motion-safe:after:transition-all motion-safe:after:duration-300 hover:after:w-3/5",
                   isActive && "text-blue-600 after:w-3/5",
                 )}
               >
@@ -79,8 +79,8 @@ export function SiteHeader({ className }: { className?: string }) {
                 0x7c…A1b3
               </div>
               <Button
-                variant="secondary"
-                className="rounded-full border border-neutral-300 bg-white text-black hover:bg-neutral-50 dark:border-neutral-700 dark:bg-black dark:text-white dark:hover:bg-neutral-900"
+                variant="outline"
+                className="rounded-full card-hover border-neutral-300/70 bg-white/60 backdrop-blur supports-[backdrop-filter]:bg-white/50 text-black hover:bg-white/70 dark:border-neutral-700/70 dark:bg-black/40 dark:text-white dark:hover:bg-black/50"
                 onClick={() => setConnected(false)}
               >
                 Disconnect

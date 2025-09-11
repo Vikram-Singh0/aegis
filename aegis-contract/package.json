@@ -8,6 +8,7 @@
   "devDependencies": {
     "@matterlabs/hardhat-zksync-solc": "^1.1.14",
     "@matterlabs/hardhat-zksync-verify": "^1.7.1",
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
     "@nomiclabs/hardhat-ethers": "^2.2.3",
     "@nomiclabs/hardhat-waffle": "^2.0.6",
     "chai": "^6.0.1",
@@ -16,7 +17,10 @@
     "hardhat": "^2.19.1"
   },
   "dependencies": {
+    "@openzeppelin/contracts": "^5.4.0",
     "@thirdweb-dev/contracts": "^3.8.0",
+    "dotenv": "^17.2.2",
+    "thirdweb": "^5.105.43",
     "zksync-ethers": "^5.7.0"
   }
 }
