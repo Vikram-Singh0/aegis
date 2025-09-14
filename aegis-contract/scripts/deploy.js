@@ -40,7 +40,25 @@ async function main() {
   await manager.waitForDeployment();
   console.log("✅ CollateralManager deployed at:", await manager.getAddress());
 
-  // 4. Deploy UserVaults for demo users
+  // 4. Deploy MockPriceOracle
+  const MockPriceOracle = await ethers.getContractFactory("MockPriceOracle");
+  const oracle = await MockPriceOracle.deploy();
+  await oracle.waitForDeployment();
+  console.log("✅ MockPriceOracle deployed at:", await oracle.getAddress());
+
+  // 5. Set up oracle in CollateralManager
+  await manager.connect(deployer).setOracle(await oracle.getAddress());
+  console.log("✅ Oracle set in CollateralManager");
+
+  // 6. Set initial prices in oracle
+  const wethOraclePrice = ethers.parseEther("2000"); // $2000
+  const usdcOraclePrice = ethers.parseEther("1");    // $1
+
+  await oracle.connect(deployer).setPrice(await weth.getAddress(), wethOraclePrice);
+  await oracle.connect(deployer).setPrice(await usdc.getAddress(), usdcOraclePrice);
+  console.log("✅ Initial prices set in oracle");
+
+  // 7. Deploy UserVaults for demo users
   const UserVault = await ethers.getContractFactory("UserVault");
 
   // Deploy vault for user1
@@ -53,14 +71,14 @@ async function main() {
   await userVault2.waitForDeployment();
   console.log("✅ UserVault2 deployed at:", await userVault2.getAddress());
 
-  // 5. Set up user vaults in CollateralManager
+  // 8. Set up user vaults in CollateralManager
   await manager.connect(user1).setUserVault(await userVault1.getAddress());
   console.log("✅ User1 vault set in CollateralManager");
 
   await manager.connect(user2).setUserVault(await userVault2.getAddress());
   console.log("✅ User2 vault set in CollateralManager");
 
-  // 6. Fund users with tokens for testing
+  // 9. Fund users with tokens for testing
   const userFunding = ethers.parseEther("1000");
   await weth.transfer(user1.address, userFunding);
   await weth.transfer(user2.address, userFunding);
@@ -68,7 +86,7 @@ async function main() {
   await usdc.transfer(user2.address, userFunding);
   console.log("✅ Users funded with test tokens");
 
-  // 7. Fund the CollateralManager pool with USDC for borrowing
+  // 10. Fund the CollateralManager pool with USDC for borrowing
   const poolFunding = ethers.parseEther("100000");
   await usdc.transfer(await manager.getAddress(), poolFunding);
   console.log("✅ CollateralManager pool funded with USDC");
@@ -79,6 +97,7 @@ async function main() {
   console.log("WETH:", await weth.getAddress());
   console.log("USDC:", await usdc.getAddress());
   console.log("CollateralManager:", await manager.getAddress());
+  console.log("MockPriceOracle:", await oracle.getAddress());
   console.log("UserVault1 (User1):", await userVault1.getAddress());
   console.log("UserVault2 (User2):", await userVault2.getAddress());
   console.log("=====================================");
@@ -88,10 +107,11 @@ async function main() {
   console.log("User2:", user2.address);
   console.log("=====================================");
   console.log("Configuration:");
-  console.log("WETH Price: $2000");
-  console.log("USDC Price: $1");
+  console.log("WETH Price (Oracle): $2000");
+  console.log("USDC Price (Oracle): $1");
   console.log("Collateral Factor: 60%");
   console.log("Liquidation Threshold: 80%");
+  console.log("Oracle Integration: Enabled");
   console.log("=====================================");
 }
 

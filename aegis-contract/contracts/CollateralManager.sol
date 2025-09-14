@@ -47,10 +47,19 @@ interface IERC20Decimals {
     function decimals() external view returns (uint8);
 }
 
+// Price Oracle interface for getting token prices
+interface IPriceOracle {
+    function getPrice(address token) external view returns (uint256 price);
+
+    function isValidPrice(address token) external view returns (bool isValid);
+
+    function isPaused() external view returns (bool isPaused);
+}
+
 /**
  * CollateralManager (MVP)
  * - Single collateral token + single debt token
- * - Fixed prices (owner-set) for quick hackathon demos
+ * - Oracle-based prices with fallback to fixed prices
  * - LTV and Liquidation Threshold constants
  * - No interest for Day 1
  */
@@ -63,9 +72,15 @@ contract CollateralManager {
     uint8 private immutable collateralDec;
     uint8 private immutable debtDec;
 
-    // solidity has no floating numbers only pure integers Scaling values by 1e18 simulates decimals so divisions like value/price retain precision when converted back down later. This avoids rounding losses and enables consistent calculations across functions such as “value in USD,” LTV, and health factor.
+    // Price oracle for dynamic pricing
+    IPriceOracle public priceOracle;
+
+    // Fallback prices (used when oracle is unavailable)
     uint256 public collateralPrice1e18;
     uint256 public debtPrice1e18;
+
+    // Oracle configuration
+    bool public useOracle = true;
 
     // risk parameters
     // here ew are defing the variables for the max we can borrow in respect to our collatreal submitted.
@@ -106,6 +121,7 @@ contract CollateralManager {
         uint256 collateralFactor1e18,
         uint256 liquidationThreshold1e18
     );
+    event OracleUpdated(address indexed oracle, bool useOracle);
     event LiquiditySupplied(address indexed supplier, uint256 amount);
     event LiquidityWithdrawn(address indexed to, uint256 amount);
     event CollateralDeposited(address indexed user, uint256 amount);
@@ -165,6 +181,47 @@ contract CollateralManager {
             _collateralFactor1e18,
             _liquidationThreshold1e18
         );
+    }
+
+    // --- oracle management ---
+    function setOracle(address _oracle) external onlyOwner {
+        priceOracle = IPriceOracle(_oracle);
+        emit OracleUpdated(_oracle, useOracle);
+    }
+
+    function setUseOracle(bool _useOracle) external onlyOwner {
+        useOracle = _useOracle;
+        emit OracleUpdated(address(priceOracle), _useOracle);
+    }
+
+    function getCurrentCollateralPrice() public view returns (uint256) {
+        if (useOracle && address(priceOracle) != address(0)) {
+            try priceOracle.getPrice(address(collateralToken)) returns (
+                uint256 price
+            ) {
+                if (priceOracle.isValidPrice(address(collateralToken))) {
+                    return price;
+                }
+            } catch {
+                // Fall through to fallback price
+            }
+        }
+        return collateralPrice1e18;
+    }
+
+    function getCurrentDebtPrice() public view returns (uint256) {
+        if (useOracle && address(priceOracle) != address(0)) {
+            try priceOracle.getPrice(address(debtToken)) returns (
+                uint256 price
+            ) {
+                if (priceOracle.isValidPrice(address(debtToken))) {
+                    return price;
+                }
+            } catch {
+                // Fall through to fallback price
+            }
+        }
+        return debtPrice1e18;
     }
 
     // --- liquidity (for Day 1 demo; naive pool) ---
@@ -337,12 +394,14 @@ contract CollateralManager {
         uint256 collateralRaw
     ) internal view returns (uint256) {
         uint256 norm = _to1e18(collateralRaw, collateralDec);
-        return (norm * collateralPrice1e18) / 1e18;
+        uint256 currentPrice = getCurrentCollateralPrice();
+        return (norm * currentPrice) / 1e18;
     }
 
     function _valueOfDebt1e18(uint256 debtRaw) internal view returns (uint256) {
         uint256 norm = _to1e18(debtRaw, debtDec);
-        return (norm * debtPrice1e18) / 1e18;
+        uint256 currentPrice = getCurrentDebtPrice();
+        return (norm * currentPrice) / 1e18;
     }
 
     function _maxBorrowableDebtRaw(
