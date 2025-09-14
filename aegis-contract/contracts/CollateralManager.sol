@@ -93,6 +93,8 @@ contract CollateralManager {
         uint256 debt;
     }
     mapping(address => Position) public positions;
+    // optional externalized custody: user -> vault address
+    mapping(address => address) public userVault;
 
     // Liquidity accounting (simple)
     uint256 public totalSuppliedLiquidity; // debt tokens supplied to pool (raw)
@@ -110,6 +112,7 @@ contract CollateralManager {
     event CollateralWithdrawn(address indexed user, uint256 amount);
     event Borrowed(address indexed user, uint256 amount);
     event Repaid(address indexed user, uint256 amount);
+    event VaultCreated(address indexed user, address vault);
 
     constructor(
         address _collateralToken,
@@ -130,6 +133,14 @@ contract CollateralManager {
         debtPrice1e18 = _debtPrice1e18;
         collateralFactor1e18 = _collateralFactor1e18;
         liquidationThreshold1e18 = _liquidationThreshold1e18;
+    }
+
+    // --- vault management ---
+    function setUserVault(address vault) external {
+        require(userVault[msg.sender] == address(0), "VAULT_SET");
+        require(vault != address(0), "ZERO");
+        userVault[msg.sender] = vault;
+        emit VaultCreated(msg.sender, vault);
     }
 
     // --- admin ---
@@ -181,8 +192,10 @@ contract CollateralManager {
     // --- user actions ---
     function depositCollateral(uint256 amount) external nonReentrant {
         require(amount > 0, "ZERO");
+        address vault = userVault[msg.sender];
+        address receiveTo = vault == address(0) ? address(this) : vault;
         require(
-            collateralToken.transferFrom(msg.sender, address(this), amount),
+            collateralToken.transferFrom(msg.sender, receiveTo, amount),
             "TRANSFER_FAIL"
         );
         positions[msg.sender].collateral += amount;
@@ -243,7 +256,25 @@ contract CollateralManager {
         }
 
         p.collateral = newCollateral;
-        require(collateralToken.transfer(msg.sender, amount), "TRANSFER_FAIL");
+        address vault = userVault[msg.sender];
+        if (vault == address(0)) {
+            require(
+                collateralToken.transfer(msg.sender, amount),
+                "TRANSFER_FAIL"
+            );
+        } else {
+            // instruct vault to send tokens back to owner
+            // call UserVault.sendToken(token, to, amount)
+            (bool ok, ) = vault.call(
+                abi.encodeWithSignature(
+                    "sendToken(address,address,uint256)",
+                    address(collateralToken),
+                    msg.sender,
+                    amount
+                )
+            );
+            require(ok, "VAULT_SEND_FAIL");
+        }
         emit CollateralWithdrawn(msg.sender, amount);
     }
 
@@ -342,5 +373,53 @@ contract CollateralManager {
         uint256 debtRaw
     ) internal view returns (bool) {
         return _healthFactor1e18(collateralRaw, debtRaw) >= 1e18;
+    }
+
+    // --- liquidation (basic) ---
+    function liquidate(
+        address user,
+        uint256 repayAmount,
+        address to
+    ) external nonReentrant {
+        require(repayAmount > 0, "ZERO");
+        Position storage p = positions[user];
+        require(p.debt > 0, "NO_DEBT");
+        require(
+            !_isHealthyAtLiquidationThreshold(p.collateral, p.debt),
+            "HEALTHY"
+        );
+
+        if (repayAmount > p.debt) repayAmount = p.debt;
+
+        // pull debt token from liquidator
+        require(
+            debtToken.transferFrom(msg.sender, address(this), repayAmount),
+            "TRANSFER_FAIL"
+        );
+        p.debt -= repayAmount;
+        totalOutstandingDebt -= repayAmount;
+
+        // seize proportional collateral at 1:1 value basis for MVP
+        // collToSeize1e18 = repayValueUSD / collateralPrice
+        uint256 repayVal1e18 = _valueOfDebt1e18(repayAmount);
+        uint256 seizeNorm1e18 = (repayVal1e18 * 1e18) / collateralPrice1e18;
+        uint256 seizeRaw = _from1e18(seizeNorm1e18, collateralDec);
+        if (seizeRaw > p.collateral) seizeRaw = p.collateral;
+        p.collateral -= seizeRaw;
+
+        address vault = userVault[user];
+        if (vault == address(0)) {
+            require(collateralToken.transfer(to, seizeRaw), "TRANSFER_FAIL");
+        } else {
+            (bool ok, ) = vault.call(
+                abi.encodeWithSignature(
+                    "sendToken(address,address,uint256)",
+                    address(collateralToken),
+                    to,
+                    seizeRaw
+                )
+            );
+            require(ok, "VAULT_SEND_FAIL");
+        }
     }
 }
