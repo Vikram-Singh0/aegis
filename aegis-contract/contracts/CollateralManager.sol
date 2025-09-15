@@ -1,12 +1,16 @@
-// SPDX-License-Identifier:MIT
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.20;
 
-// Intrefaces are like the blueprints of a contract that other contracts can implement:they contain all the functions that the contract will have.but do not contain logic inside them or retyurn any values.
+import "./AccessControl.sol";
+import "./Pausable.sol";
+import "./RiskBounds.sol";
 
-//IERC20 is an interface for the ERC20 token that contains all the functions that the ERC20 token will have.
+// Interfaces are like the blueprints of a contract that other contracts can implement: they contain all the functions that the contract will have but do not contain logic inside them or return any values.
 
-//Etherium Request for Comment (ERC) has a standard process for improving the Ethereum blockchain.ERC20 is a token standard that's used to create the fungible tokens on Ethereum blockchain.
+// IERC20 is an interface for the ERC20 token that contains all the functions that the ERC20 token will have.
+
+// Ethereum Request for Comment (ERC) has a standard process for improving the Ethereum blockchain. ERC20 is a token standard that's used to create the fungible tokens on Ethereum blockchain.
 interface IERC20 {
     function totalSupply() external view returns (uint256);
 
@@ -57,16 +61,19 @@ interface IPriceOracle {
 }
 
 /**
- * CollateralManager (MVP)
+ * CollateralManager (Enhanced Security Version)
  * - Single collateral token + single debt token
  * - Oracle-based prices with fallback to fixed prices
  * - LTV and Liquidation Threshold constants
+ * - Role-based access control
+ * - Emergency pause functionality
+ * - Risk parameter bounds validation
+ * - Timelock support for critical operations
  * - No interest for Day 1
  */
-contract CollateralManager {
+contract CollateralManager is AccessControl, Pausable {
     //configurations
 
-    address public owner;
     IERC20 public immutable collateralToken;
     IERC20 public immutable debtToken;
     uint8 private immutable collateralDec;
@@ -82,14 +89,20 @@ contract CollateralManager {
     // Oracle configuration
     bool public useOracle = true;
 
+    // Risk bounds contract for parameter validation
+    RiskBounds public riskBounds;
+
     // risk parameters
-    // here ew are defing the variables for the max we can borrow in respect to our collatreal submitted.
+    // here we are defining the variables for the max we can borrow in respect to our collateral submitted.
     uint256 public collateralFactor1e18;
-    // the max limit set by the contract after certain limit at which the collateral will start liquidating if it crossed the threashold value.
+    // the max limit set by the contract after certain limit at which the collateral will start liquidating if it crossed the threshold value.
     uint256 public liquidationThreshold1e18;
 
+    // Timelock controller for delayed operations
+    address public timelockController;
+
     // Reentrancy guard
-    //Reentrancy happens when a contract makes an external call (for example, a token transfer) and the callee calls back into the original contract before the first call finishes, potentially manipulating state (like draining funds) before updates are finalized. A boolean lock prevents the second entry while the first call is still executing
+    // Reentrancy happens when a contract makes an external call (for example, a token transfer) and the callee calls back into the original contract before the first call finishes, potentially manipulating state (like draining funds) before updates are finalized. A boolean lock prevents the second entry while the first call is still executing
     bool private locked;
 
     modifier nonReentrant() {
@@ -100,7 +113,30 @@ contract CollateralManager {
     }
 
     modifier onlyOwner() {
-        require(msg.sender == owner, "NOT_OWNER");
+        require(hasRole(OWNER_ROLE, msg.sender), "NOT_OWNER");
+        _;
+    }
+
+    modifier onlyAdmin() {
+        require(hasRole(ADMIN_ROLE, msg.sender), "NOT_ADMIN");
+        _;
+    }
+
+    modifier onlyParameterRole() {
+        require(hasRole(PARAMETER_ROLE, msg.sender), "NOT_PARAMETER_ROLE");
+        _;
+    }
+
+    modifier onlyEmergencyRole() {
+        require(hasRole(EMERGENCY_ROLE, msg.sender), "NOT_EMERGENCY_ROLE");
+        _;
+    }
+
+    modifier onlyTimelockOrOwner() {
+        require(
+            msg.sender == timelockController || hasRole(OWNER_ROLE, msg.sender),
+            "NOT_TIMELOCK_OR_OWNER"
+        );
         _;
     }
     struct Position {
@@ -129,6 +165,9 @@ contract CollateralManager {
     event Borrowed(address indexed user, uint256 amount);
     event Repaid(address indexed user, uint256 amount);
     event VaultCreated(address indexed user, address vault);
+    event RiskBoundsUpdated(address indexed riskBounds);
+    event TimelockControllerUpdated(address indexed timelockController);
+    event EmergencyActionExecuted(address indexed executor, string action);
 
     constructor(
         address _collateralToken,
@@ -136,19 +175,32 @@ contract CollateralManager {
         uint256 _collateralPrice1e18,
         uint256 _debtPrice1e18,
         uint256 _collateralFactor1e18, // e.g., 6e17 for 60%
-        uint256 _liquidationThreshold1e18 // e.g., 8e17 for 80%
+        uint256 _liquidationThreshold1e18, // e.g., 8e17 for 80%
+        address _riskBounds
     ) {
-        owner = msg.sender;
         collateralToken = IERC20(_collateralToken);
         debtToken = IERC20(_debtToken);
         collateralDec = IERC20Decimals(_collateralToken).decimals();
         debtDec = IERC20Decimals(_debtToken).decimals();
         require(_collateralPrice1e18 > 0 && _debtPrice1e18 > 0, "BAD_PRICES");
         require(_collateralFactor1e18 < _liquidationThreshold1e18, "FACTOR_LT");
+        require(_riskBounds != address(0), "INVALID_RISK_BOUNDS");
+
         collateralPrice1e18 = _collateralPrice1e18;
         debtPrice1e18 = _debtPrice1e18;
         collateralFactor1e18 = _collateralFactor1e18;
         liquidationThreshold1e18 = _liquidationThreshold1e18;
+        riskBounds = RiskBounds(_riskBounds);
+
+        // Validate initial parameters against risk bounds
+        require(
+            riskBounds.validateCollateralFactor(_collateralFactor1e18),
+            "INVALID_COLLATERAL_FACTOR"
+        );
+        require(
+            riskBounds.validateLiquidationThreshold(_liquidationThreshold1e18),
+            "INVALID_LIQUIDATION_THRESHOLD"
+        );
     }
 
     // --- vault management ---
@@ -163,8 +215,28 @@ contract CollateralManager {
     function setPrices(
         uint256 _collateralPrice1e18,
         uint256 _debtPrice1e18
-    ) external onlyOwner {
+    ) external onlyParameterRole whenNotPaused {
         require(_collateralPrice1e18 > 0 && _debtPrice1e18 > 0, "BAD_PRICES");
+
+        // Validate price deviation if oracle is available
+        if (useOracle && address(priceOracle) != address(0)) {
+            try priceOracle.getPrice(address(collateralToken)) returns (
+                uint256 oraclePrice
+            ) {
+                if (oraclePrice > 0) {
+                    require(
+                        riskBounds.validatePriceDeviation(
+                            _collateralPrice1e18,
+                            oraclePrice
+                        ),
+                        "PRICE_DEVIATION_TOO_HIGH"
+                    );
+                }
+            } catch {
+                // Oracle unavailable, allow fallback price update
+            }
+        }
+
         collateralPrice1e18 = _collateralPrice1e18;
         debtPrice1e18 = _debtPrice1e18;
         emit PricesUpdated(_collateralPrice1e18, _debtPrice1e18);
@@ -173,8 +245,24 @@ contract CollateralManager {
     function setRiskParams(
         uint256 _collateralFactor1e18,
         uint256 _liquidationThreshold1e18
-    ) external onlyOwner {
+    ) external onlyTimelockOrOwner whenNotPaused {
         require(_collateralFactor1e18 < _liquidationThreshold1e18, "FACTOR_LT");
+        require(
+            riskBounds.validateCollateralFactor(_collateralFactor1e18),
+            "INVALID_COLLATERAL_FACTOR"
+        );
+        require(
+            riskBounds.validateLiquidationThreshold(_liquidationThreshold1e18),
+            "INVALID_LIQUIDATION_THRESHOLD"
+        );
+        require(
+            riskBounds.validateThresholdHigherThanFactor(
+                _collateralFactor1e18,
+                _liquidationThreshold1e18
+            ),
+            "THRESHOLD_NOT_HIGHER_THAN_FACTOR"
+        );
+
         collateralFactor1e18 = _collateralFactor1e18;
         liquidationThreshold1e18 = _liquidationThreshold1e18;
         emit RiskParamsUpdated(
@@ -184,14 +272,55 @@ contract CollateralManager {
     }
 
     // --- oracle management ---
-    function setOracle(address _oracle) external onlyOwner {
+    function setOracle(address _oracle) external onlyAdmin whenNotPaused {
         priceOracle = IPriceOracle(_oracle);
         emit OracleUpdated(_oracle, useOracle);
     }
 
-    function setUseOracle(bool _useOracle) external onlyOwner {
+    function setUseOracle(
+        bool _useOracle
+    ) external onlyParameterRole whenNotPaused {
         useOracle = _useOracle;
         emit OracleUpdated(address(priceOracle), _useOracle);
+    }
+
+    // --- risk bounds management ---
+    function setRiskBounds(address _riskBounds) external onlyOwner {
+        require(_riskBounds != address(0), "INVALID_RISK_BOUNDS");
+        riskBounds = RiskBounds(_riskBounds);
+        emit RiskBoundsUpdated(_riskBounds);
+    }
+
+    // --- timelock management ---
+    function setTimelockController(
+        address _timelockController
+    ) external onlyOwner {
+        timelockController = _timelockController;
+        emit TimelockControllerUpdated(_timelockController);
+    }
+
+    // --- emergency functions ---
+    function emergencyPause() external onlyEmergencyRole {
+        pause();
+        emit EmergencyActionExecuted(msg.sender, "PAUSE");
+    }
+
+    function emergencyUnpause() external onlyEmergencyRole {
+        unpause();
+        emit EmergencyActionExecuted(msg.sender, "UNPAUSE");
+    }
+
+    function emergencyWithdrawLiquidity(
+        uint256 amount
+    ) external onlyEmergencyRole whenPaused {
+        require(amount > 0, "ZERO");
+        uint256 poolBal = debtToken.balanceOf(address(this));
+        require(amount <= poolBal, "INSUFFICIENT_POOL_BAL");
+        require(debtToken.transfer(msg.sender, amount), "TRANSFER_FAIL");
+        if (amount > totalSuppliedLiquidity) totalSuppliedLiquidity = 0;
+        else totalSuppliedLiquidity -= amount;
+        emit LiquidityWithdrawn(msg.sender, amount);
+        emit EmergencyActionExecuted(msg.sender, "EMERGENCY_WITHDRAW");
     }
 
     function getCurrentCollateralPrice() public view returns (uint256) {
@@ -225,7 +354,9 @@ contract CollateralManager {
     }
 
     // --- liquidity (for Day 1 demo; naive pool) ---
-    function supplyLiquidity(uint256 amount) external nonReentrant {
+    function supplyLiquidity(
+        uint256 amount
+    ) external nonReentrant whenNotPaused {
         require(amount > 0, "ZERO");
         require(
             debtToken.transferFrom(msg.sender, address(this), amount),
@@ -235,7 +366,9 @@ contract CollateralManager {
         emit LiquiditySupplied(msg.sender, amount);
     }
 
-    function withdrawLiquidity(uint256 amount) external onlyOwner nonReentrant {
+    function withdrawLiquidity(
+        uint256 amount
+    ) external onlyAdmin nonReentrant whenNotPaused {
         require(amount > 0, "ZERO");
         // ensure pool stays solvent: cannot pull out what is lent
         uint256 poolBal = debtToken.balanceOf(address(this));
@@ -247,7 +380,9 @@ contract CollateralManager {
     }
 
     // --- user actions ---
-    function depositCollateral(uint256 amount) external nonReentrant {
+    function depositCollateral(
+        uint256 amount
+    ) external nonReentrant whenNotPaused {
         require(amount > 0, "ZERO");
         address vault = userVault[msg.sender];
         address receiveTo = vault == address(0) ? address(this) : vault;
@@ -259,7 +394,7 @@ contract CollateralManager {
         emit CollateralDeposited(msg.sender, amount);
     }
 
-    function borrow(uint256 amount) external nonReentrant {
+    function borrow(uint256 amount) external nonReentrant whenNotPaused {
         require(amount > 0, "ZERO");
         Position storage p = positions[msg.sender];
 
@@ -292,7 +427,9 @@ contract CollateralManager {
         emit Repaid(msg.sender, amount);
     }
 
-    function withdrawCollateral(uint256 amount) external nonReentrant {
+    function withdrawCollateral(
+        uint256 amount
+    ) external nonReentrant whenNotPaused {
         require(amount > 0, "ZERO");
         Position storage p = positions[msg.sender];
         require(p.collateral >= amount, "INSUFFICIENT_COLLATERAL");
@@ -480,5 +617,40 @@ contract CollateralManager {
             );
             require(ok, "VAULT_SEND_FAIL");
         }
+    }
+
+    // --- additional view functions ---
+    function getRiskBounds() external view returns (address) {
+        return address(riskBounds);
+    }
+
+    function getTimelockController() external view returns (address) {
+        return timelockController;
+    }
+
+    function isPaused() external view returns (bool) {
+        return paused();
+    }
+
+    function hasRole(
+        bytes32 role,
+        address account
+    ) public view override returns (bool) {
+        return AccessControl.hasRole(role, account);
+    }
+
+    function getRoleAdmin(bytes32 role) public view override returns (bytes32) {
+        return AccessControl.getRoleAdmin(role);
+    }
+
+    // --- ownership transfer functions ---
+    function transferOwnership(address newOwner) external onlyOwner {
+        require(newOwner != address(0), "NEW_OWNER_ZERO");
+        grantRole(OWNER_ROLE, newOwner);
+        revokeRole(OWNER_ROLE, msg.sender);
+    }
+
+    function renounceOwnership() external onlyOwner {
+        revokeRole(OWNER_ROLE, msg.sender);
     }
 }

@@ -248,9 +248,14 @@ describe("MockPriceOracle", function () {
   });
 
   describe("Integration with CollateralManager", function () {
-    let manager;
+    let manager, riskBounds;
 
     beforeEach(async () => {
+      // Deploy RiskBounds first
+      const RiskBounds = await ethers.getContractFactory("RiskBounds");
+      riskBounds = await RiskBounds.deploy();
+      await riskBounds.waitForDeployment();
+
       // Deploy CollateralManager
       const Manager = await ethers.getContractFactory("CollateralManager");
       manager = await Manager.deploy(
@@ -259,7 +264,8 @@ describe("MockPriceOracle", function () {
         ethers.parseEther("2000"), // fallback collateral price
         ethers.parseEther("1"),    // fallback debt price
         ethers.parseEther("0.6"),  // collateral factor
-        ethers.parseEther("0.8")   // liquidation threshold
+        ethers.parseEther("0.8"),  // liquidation threshold
+        await riskBounds.getAddress() // risk bounds address
       );
       await manager.waitForDeployment();
 

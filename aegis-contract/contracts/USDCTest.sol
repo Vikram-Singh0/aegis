@@ -7,4 +7,8 @@ contract USDCTest is ERC20 {
     constructor(uint256 initialSupply) ERC20("USD Coin Test", "USDC-Test") {
         _mint(msg.sender, initialSupply);
     }
+
+    function mint(address to, uint256 amount) external {
+        _mint(to, amount);
+    }
 }

@@ -18,6 +18,11 @@ describe("UserVault", function () {
     usdc = await USDC.deploy(ethers.parseEther("100000000"));
     await usdc.waitForDeployment();
 
+    // Deploy RiskBounds first
+    const RiskBounds = await ethers.getContractFactory("RiskBounds");
+    const riskBounds = await RiskBounds.deploy();
+    await riskBounds.waitForDeployment();
+
     // Deploy CollateralManager as controller
     const Manager = await ethers.getContractFactory("CollateralManager");
     manager = await Manager.deploy(
@@ -26,7 +31,8 @@ describe("UserVault", function () {
       ethers.parseEther("3000"),
       ethers.parseEther("1"),
       ethers.parseEther("0.6"),
-      ethers.parseEther("0.8")
+      ethers.parseEther("0.8"),
+      await riskBounds.getAddress()
     );
     await manager.waitForDeployment();
 

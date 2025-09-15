@@ -12,6 +12,7 @@ const links = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/borrow", label: "Borrow" },
   { href: "/repay", label: "Repay" },
+  { href: "/withdraw", label: "Withdraw" },
   { href: "/credit", label: "Credit" },
   { href: "/notifications", label: "Notifications" },
   { href: "/settings", label: "Settings" },

@@ -84,9 +84,9 @@ export default function Page() {
                 </div>
               </CardContent>
             </Card>
-            <p className="mt-3 text-center text-xs text-neutral-600">
+            {/* <p className="mt-3 text-center text-xs text-neutral-600">
               High-contrast, readable in low light and grayscale.
-            </p>
+            </p> */}
           </div>
         </div>
       </section>

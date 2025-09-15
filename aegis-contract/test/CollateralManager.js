@@ -18,6 +18,11 @@ describe("CollateralManager MVP", function () {
     usdc = await USDC.deploy(ethers.parseEther("100000000"));
     await usdc.waitForDeployment();
 
+    // Deploy RiskBounds
+    const RiskBounds = await ethers.getContractFactory("RiskBounds");
+    const riskBounds = await RiskBounds.deploy();
+    await riskBounds.waitForDeployment();
+
     // Deploy CollateralManager with both tokens
     const Manager = await ethers.getContractFactory("CollateralManager");
     // Prices and risk params (1e18 scaled): WETH=$3000, USDC=$1, CF=60%, LT=80%
@@ -27,7 +32,8 @@ describe("CollateralManager MVP", function () {
       ethers.parseEther("3000"),
       ethers.parseEther("1"),
       ethers.parseEther("0.6"),
-      ethers.parseEther("0.8")
+      ethers.parseEther("0.8"),
+      await riskBounds.getAddress()
     );
     await manager.waitForDeployment();
   });

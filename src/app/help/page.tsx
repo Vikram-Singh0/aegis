@@ -16,7 +16,7 @@ const faqs = [
   },
   {
     q: "Which network is this on?",
-    a: "Aegis Network. Ensure your wallet is configured accordingly (mock for this design).",
+    a: "Currently Aegis supports Somnia Network.But we are expecting for multiple networks in future.",
   },
 ]
 

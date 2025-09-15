@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
 import { SiteFooter } from "@/components/site-footer"
 import {ThirdwebProvider} from "thirdweb/react"
+import { Toaster } from "sonner"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -51,6 +52,7 @@ export default function RootLayout({
             </div>
             <SiteFooter />
           </div>
+          <Toaster position="top-right" richColors />
           <Analytics />
         </ThirdwebProvider>
       </body>
