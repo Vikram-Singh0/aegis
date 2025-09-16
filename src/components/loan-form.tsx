@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { useAccountData, useTokenBalances, usePrices, useContractActions, parseTokenAmount, formatTokenAmount, formatUSD } from "@/hooks/useContract"
+import { useAccountData, useTokenBalances, usePrices, useContractActions, parseTokenAmount, formatTokenAmount, formatUSD, useUsdcDecimals } from "@/hooks/useContract"
 import WalletConnection from "@/app/walletConnection"
 
 export function LoanForm() {
@@ -23,12 +23,22 @@ export function LoanForm() {
   const { wethBalance, usdcBalance } = useTokenBalances()
   const { collateralPrice, debtPrice } = usePrices()
   const { depositCollateral, borrow: borrowAction, isPending } = useContractActions()
+  const usdcDecimals = useUsdcDecimals() || 6
+
+  // If user already has collateral deposited (or has borrow capacity), jump to borrow step
+  useEffect(() => {
+    const hasCollateral = accountData ? (accountData[0] as bigint) > 0n : false
+    const hasCapacity = accountData ? (accountData[4] as bigint) > 0n : false
+    if ((hasCollateral || hasCapacity) && !reviewing) {
+      setReviewing(true)
+    }
+  }, [accountData, reviewing])
 
   // Calculate real values from contract data
   const collateralPriceUSD = Number(formatTokenAmount(collateralPrice, 18))
   const collateralUSD = Number(collateral || 0) * (collateralPriceUSD || 3000)
-  const maxBorrow = accountData ? Number(formatTokenAmount(accountData[4], 6)) : 0 // maxBorrowDebtRaw
-  const currentDebt = accountData ? Number(formatTokenAmount(accountData[1], 6)) : 0 // debtRaw
+  const maxBorrow = accountData ? Number(formatTokenAmount(accountData[4], usdcDecimals)) : 0 // maxBorrowDebtRaw
+  const currentDebt = accountData ? Number(formatTokenAmount(accountData[1], usdcDecimals)) : 0 // debtRaw
   const healthFactor = accountData ? Number(formatTokenAmount(accountData[5], 18)) : 0 // healthFactor1e18
   
   const ltv = collateralUSD > 0 ? (Number(borrow || 0) / collateralUSD) : 0
@@ -57,7 +67,7 @@ export function LoanForm() {
     
     setIsBorrowing(true)
     try {
-      const amount = parseTokenAmount(borrow, 6) // USDC has 6 decimals
+      const amount = parseTokenAmount(borrow, usdcDecimals)
       await borrowAction(amount)
     } catch (error) {
       console.error("Borrow failed:", error)

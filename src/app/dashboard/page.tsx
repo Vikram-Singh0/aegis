@@ -7,6 +7,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ScoreCard } from "@/components/score-card"
 import { useAccountData, useTokenBalances, usePrices, formatTokenAmount, formatUSD } from "@/hooks/useContract"
+import { DebugPanel } from "@/components/debug-panel"
 
 import WalletConnection from "@/app/walletConnection"
 
@@ -108,6 +109,7 @@ export default function DashboardPage() {
         </div>
         <LoanList />
       </section>
+      <DebugPanel />
     </main>
   )
 }

@@ -91,6 +91,41 @@ export const COLLATERAL_MANAGER_ABI = [
     "stateMutability": "view"
   },
   {
+    "type": "function",
+    "name": "collateralFactor1e18",
+    "inputs": [],
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "liquidationThreshold1e18",
+    "inputs": [],
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "totalSuppliedLiquidity",
+    "inputs": [],
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "totalOutstandingDebt",
+    "inputs": [],
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "isPaused",
+    "inputs": [],
+    "outputs": [{"name": "", "type": "bool"}],
+    "stateMutability": "view"
+  },
+  {
     "type": "event",
     "name": "CollateralDeposited",
     "inputs": [
@@ -119,6 +154,22 @@ export const COLLATERAL_MANAGER_ABI = [
     "name": "CollateralWithdrawn",
     "inputs": [
       {"name": "user", "type": "address", "indexed": true},
+      {"name": "amount", "type": "uint256", "indexed": false}
+    ]
+  },
+  {
+    "type": "event",
+    "name": "PricesUpdated",
+    "inputs": [
+      {"name": "collateralPrice1e18", "type": "uint256", "indexed": false},
+      {"name": "debtPrice1e18", "type": "uint256", "indexed": false}
+    ]
+  },
+  {
+    "type": "event",
+    "name": "LiquiditySupplied",
+    "inputs": [
+      {"name": "supplier", "type": "address", "indexed": true},
       {"name": "amount", "type": "uint256", "indexed": false}
     ]
   }
@@ -220,6 +271,34 @@ export const ERC20_ABI = [
     "name": "name",
     "inputs": [],
     "outputs": [{"name": "", "type": "string"}],
+    "stateMutability": "view"
+  }
+] as const;
+
+// Test USDC with mint function (for local/testnet funding)
+export const USDC_TEST_ABI = [
+  {
+    "type": "function",
+    "name": "mint",
+    "inputs": [
+      {"name": "to", "type": "address"},
+      {"name": "amount", "type": "uint256"}
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "symbol",
+    "inputs": [],
+    "outputs": [{"name": "", "type": "string"}],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "decimals",
+    "inputs": [],
+    "outputs": [{"name": "", "type": "uint8"}],
     "stateMutability": "view"
   }
 ] as const;

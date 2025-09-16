@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { useAccountData, useTokenBalances, useContractActions, parseTokenAmount, formatTokenAmount } from "@/hooks/useContract"
+import { useAccountData, useTokenBalances, useContractActions, parseTokenAmount, formatTokenAmount, useUsdcDecimals } from "@/hooks/useContract"
 import WalletConnection from "@/app/walletConnection"
 
 export function RepayForm() {
@@ -17,9 +17,10 @@ export function RepayForm() {
   const { accountData, hasAccount } = useAccountData()
   const { usdcBalance } = useTokenBalances()
   const { repay, isPending } = useContractActions()
+  const usdcDecimals = useUsdcDecimals() || 6
 
   // Get real debt amount from contract
-  const currentDebt = accountData ? Number(formatTokenAmount(accountData[1], 6)) : 0 // debtRaw
+  const currentDebt = accountData ? Number(formatTokenAmount(accountData[1], usdcDecimals)) : 0 // debtRaw
   const after = Math.max(0, currentDebt - Number(amount || 0))
 
   // Handle repay
@@ -28,7 +29,7 @@ export function RepayForm() {
     
     setIsRepaying(true)
     try {
-      const repayAmount = parseTokenAmount(amount, 6) // USDC has 6 decimals
+      const repayAmount = parseTokenAmount(amount, usdcDecimals)
       await repay(repayAmount)
     } catch (error) {
       console.error("Repay failed:", error)
