@@ -39,7 +39,7 @@ export function LoanForm() {
   const collateralUSD = Number(collateral || 0) * (collateralPriceUSD || 3000)
   const maxBorrow = accountData ? Number(formatTokenAmount(accountData[4], usdcDecimals)) : 0 // maxBorrowDebtRaw
   const currentDebt = accountData ? Number(formatTokenAmount(accountData[1], usdcDecimals)) : 0 // debtRaw
-  const healthFactor = accountData ? Number(formatTokenAmount(accountData[5], 18)) : 0 // healthFactor1e18
+  const healthFactor = accountData ? Number(formatTokenAmount(accountData[5], 18)) : 0 // healthFactor (already scaled)
   
   const ltv = collateralUSD > 0 ? (Number(borrow || 0) / collateralUSD) : 0
   const interestAPR = "5.0%"
@@ -106,7 +106,7 @@ export function LoanForm() {
         <Alert className="border-neutral-300 bg-white">
           <AlertTitle>Account Status</AlertTitle>
           <AlertDescription>
-            Health Factor: {healthFactor > 0 ? (healthFactor / 1e18).toFixed(2) : "N/A"} | 
+            Health Factor: {healthFactor > 0 ? healthFactor.toFixed(2) : "N/A"} | 
             Current Debt: ${currentDebt.toLocaleString()} | 
             Max Borrow: ${maxBorrow.toLocaleString()}
           </AlertDescription>

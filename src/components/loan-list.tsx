@@ -3,7 +3,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { StatusBadge } from "./status-badge"
-import Link from "next/link"
 import { useAccountData, usePrices, formatTokenAmount, useUsdcDecimals } from "@/hooks/useContract"
 
 export function LoanList({ showActions = true }: { showActions?: boolean }) {
@@ -52,11 +51,9 @@ export function LoanList({ showActions = true }: { showActions?: boolean }) {
           </div>
           {showActions && (
             <div className="md:col-span-4 flex gap-2 pt-2">
-              <Link href="/repay">
-                <Button size="sm" className="bg-black text-white hover:bg-neutral-900">
-                  Repay
-                </Button>
-              </Link>
+              <Button size="sm" className="bg-black text-white hover:bg-neutral-900">
+                Repay
+              </Button>
               <Button size="sm" variant="outline" className="border-neutral-300 bg-white text-black">
                 Add Collateral
               </Button>

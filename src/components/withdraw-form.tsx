@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { useAccountData, useContractActions, parseTokenAmount, formatTokenAmount } from "@/hooks/useContract"
+import { useAccountData, useContractActions, parseTokenAmount, formatTokenAmount, useUsdcDecimals } from "@/hooks/useContract"
 import WalletConnection from "@/app/walletConnection"
 
 export function WithdrawForm() {
@@ -18,8 +18,9 @@ export function WithdrawForm() {
   const { withdrawCollateral, isPending } = useContractActions()
 
   // Get real collateral amount from contract
+  const usdcDecimals = useUsdcDecimals() || 6
   const currentCollateral = accountData ? Number(formatTokenAmount(accountData[0], 18)) : 0 // collateralRaw
-  const currentDebt = accountData ? Number(formatTokenAmount(accountData[1], 6)) : 0 // debtRaw
+  const currentDebt = accountData ? Number(formatTokenAmount(accountData[1], usdcDecimals)) : 0 // debtRaw
   const healthFactor = accountData ? Number(formatTokenAmount(accountData[5], 18)) : 0 // healthFactor1e18
   
   const after = Math.max(0, currentCollateral - Number(amount || 0))
@@ -71,7 +72,7 @@ export function WithdrawForm() {
           <AlertDescription>
             Current Collateral: {formatTokenAmount(BigInt(Math.floor(currentCollateral * 1e18)), 18)} WETH | 
             Current Debt: ${currentDebt.toLocaleString()} | 
-            Health Factor: {healthFactor > 0 ? (healthFactor / 1e18).toFixed(2) : "N/A"}
+            Health Factor: {healthFactor > 0 ? healthFactor.toFixed(2) : "N/A"}
           </AlertDescription>
         </Alert>
         <div className="grid gap-4 md:grid-cols-2">

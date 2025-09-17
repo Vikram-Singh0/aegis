@@ -3,22 +3,36 @@ const { ethers } = require("hardhat");
 async function main() {
   console.log("🚀 Deploying Aegis MVP with Enhanced Security Features...\n");
 
-  // Get signers
-  const [deployer, admin, parameterManager, emergencyManager, proposer, executor] = await ethers.getSigners();
+  // Get available signers (on testnet there is usually only 1)
+  const signers = await ethers.getSigners();
+  const deployer = signers[0];
+
+  if (!deployer) {
+    throw new Error("No signer available. Ensure PRIVATE_KEY is set in .env for the selected network.");
+  }
 
   console.log("Deploying contracts with the account:", deployer.address);
   // ethers v6: signer doesn't have getBalance(); use provider
   const deployerBal = await ethers.provider.getBalance(deployer.address);
   console.log("Account balance:", ethers.formatEther(deployerBal));
 
-  // Deploy mock tokens first
-  console.log("\n📦 Deploying Mock Tokens...");
-  const USDCTest = await ethers.getContractFactory("USDCTest");
-  const collateralToken = await USDCTest.deploy(ethers.parseEther("1000000"));
-  await collateralToken.waitForDeployment();
-  console.log("Collateral Token (USDC) deployed to:", await collateralToken.getAddress());
+  // Resolve role addresses via ENV with safe fallbacks to deployer
+  const ROLE_ADMIN = process.env.ROLE_ADMIN || deployer.address;
+  const ROLE_PARAMETER = process.env.ROLE_PARAMETER || deployer.address;
+  const ROLE_EMERGENCY = process.env.ROLE_EMERGENCY || deployer.address;
+  const ROLE_PROPOSER = process.env.ROLE_PROPOSER || deployer.address;
+  const ROLE_EXECUTOR = process.env.ROLE_EXECUTOR || deployer.address;
 
-  const debtToken = await USDCTest.deploy(ethers.parseEther("1000000"));
+  // Deploy mock tokens first (WETH for collateral, USDC for debt)
+  console.log("\n📦 Deploying Mock Tokens...");
+  const WETHTest = await ethers.getContractFactory("WETHTest");
+  const USDCTest = await ethers.getContractFactory("USDCTest");
+
+  const collateralToken = await WETHTest.deploy(ethers.parseEther("1000000")); // 1M WETH test
+  await collateralToken.waitForDeployment();
+  console.log("Collateral Token (WETH) deployed to:", await collateralToken.getAddress());
+
+  const debtToken = await USDCTest.deploy(ethers.parseEther("1000000")); // 1M USDC test
   await debtToken.waitForDeployment();
   console.log("Debt Token (USDC) deployed to:", await debtToken.getAddress());
 
@@ -34,9 +48,9 @@ async function main() {
   const TimelockController = await ethers.getContractFactory("TimelockController");
   const timelockController = await TimelockController.deploy(
     3600, // 1 hour delay for critical operations
-    [proposer.address], // proposers
-    [executor.address], // executors
-    deployer.address // admin
+    [ROLE_PROPOSER], // proposers
+    [ROLE_EXECUTOR], // executors
+    ROLE_ADMIN // admin
   );
   await timelockController.waitForDeployment();
   console.log("TimelockController deployed to:", await timelockController.getAddress());
@@ -47,8 +61,8 @@ async function main() {
   const collateralManager = await CollateralManager.deploy(
     await collateralToken.getAddress(),
     await debtToken.getAddress(),
-    ethers.parseEther("1"), // collateral price: $1
-    ethers.parseEther("1"), // debt price: $1
+    ethers.parseEther("2000"), // collateral price: $2000 per WETH
+    ethers.parseEther("1"), // debt price: $1 per USDC
     ethers.parseEther("0.6"), // collateral factor: 60%
     ethers.parseEther("0.8"), // liquidation threshold: 80%
     await riskBounds.getAddress()
@@ -69,29 +83,36 @@ async function main() {
   // Grant roles to different addresses
   await collateralManager.grantRole(
     ethers.keccak256(ethers.toUtf8Bytes("ADMIN_ROLE")),
-    admin.address
+    ROLE_ADMIN
   );
-  console.log("✅ Admin role granted to:", admin.address);
+  console.log("✅ Admin role granted to:", ROLE_ADMIN);
 
   await collateralManager.grantRole(
     ethers.keccak256(ethers.toUtf8Bytes("PARAMETER_ROLE")),
-    parameterManager.address
+    ROLE_PARAMETER
   );
-  console.log("✅ Parameter role granted to:", parameterManager.address);
+  console.log("✅ Parameter role granted to:", ROLE_PARAMETER);
 
   await collateralManager.grantRole(
     ethers.keccak256(ethers.toUtf8Bytes("EMERGENCY_ROLE")),
-    emergencyManager.address
+    ROLE_EMERGENCY
   );
-  console.log("✅ Emergency role granted to:", emergencyManager.address);
+  console.log("✅ Emergency role granted to:", ROLE_EMERGENCY);
 
   // Set timelock controller
   await collateralManager.setTimelockController(await timelockController.getAddress());
   console.log("✅ Timelock controller set");
 
   // Set oracle
-  await collateralManager.connect(admin).setOracle(await priceOracle.getAddress());
+  await collateralManager.connect(deployer).setOracle(await priceOracle.getAddress());
   console.log("✅ Price oracle set");
+
+  // Seed initial oracle prices
+  const collateralOraclePrice = ethers.parseEther("2000"); // $2000 per WETH
+  const debtOraclePrice = ethers.parseEther("1"); // $1 per USDC
+  await priceOracle.connect(deployer).setPrice(await collateralToken.getAddress(), collateralOraclePrice);
+  await priceOracle.connect(deployer).setPrice(await debtToken.getAddress(), debtOraclePrice);
+  console.log("✅ Initial prices set in oracle");
 
   // Mint initial liquidity
   console.log("\n💰 Setting up initial liquidity...");
@@ -117,11 +138,11 @@ async function main() {
 
   console.log("\n👥 Role Assignments:");
   console.log("  Owner:", deployer.address);
-  console.log("  Admin:", admin.address);
-  console.log("  Parameter Manager:", parameterManager.address);
-  console.log("  Emergency Manager:", emergencyManager.address);
-  console.log("  Timelock Proposer:", proposer.address);
-  console.log("  Timelock Executor:", executor.address);
+  console.log("  Admin:", ROLE_ADMIN);
+  console.log("  Parameter Manager:", ROLE_PARAMETER);
+  console.log("  Emergency Manager:", ROLE_EMERGENCY);
+  console.log("  Timelock Proposer:", ROLE_PROPOSER);
+  console.log("  Timelock Executor:", ROLE_EXECUTOR);
 
   console.log("\n⚙️ Configuration:");
   console.log("  Collateral Factor: 60%");
@@ -151,11 +172,11 @@ async function main() {
     },
     roles: {
       owner: deployer.address,
-      admin: admin.address,
-      parameterManager: parameterManager.address,
-      emergencyManager: emergencyManager.address,
-      timelockProposer: proposer.address,
-      timelockExecutor: executor.address
+      admin: ROLE_ADMIN,
+      parameterManager: ROLE_PARAMETER,
+      emergencyManager: ROLE_EMERGENCY,
+      timelockProposer: ROLE_PROPOSER,
+      timelockExecutor: ROLE_EXECUTOR
     },
     configuration: {
       collateralFactor: "60%",

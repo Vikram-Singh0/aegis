@@ -1,0 +1,29 @@
+{
+  "network": {
+    "chainId": 50312,
+    "name": "somnia"
+  },
+  "timestamp": "2025-09-16T18:41:56.637Z",
+  "contracts": {
+    "CollateralManager": "0xe9ea03d5b64cB7f4349cc34b83C21664a5e84517",
+    "RiskBounds": "0xd31C272C054DC1AaF0330A3A99bAa5f5b6B4b378",
+    "TimelockController": "0x17b3f719Ddd537d28C8Cc413330fcebcc4269B7E",
+    "CollateralToken": "0xDf1bCcBb9f7084c46A84fCc703DA1AaB200A64Cc",
+    "DebtToken": "0x0997E976B2Bdf10B1089e8c283f18f0093fe32f5",
+    "PriceOracle": "0xaDCAa365DF2D6435CD336e5Da12c5F59e18160dB"
+  },
+  "roles": {
+    "owner": "0x13b29A0f6Fed4bBBA372ff5B20E9c45380d4981D",
+    "admin": "0x13b29A0f6Fed4bBBA372ff5B20E9c45380d4981D",
+    "parameterManager": "0x13b29A0f6Fed4bBBA372ff5B20E9c45380d4981D",
+    "emergencyManager": "0x13b29A0f6Fed4bBBA372ff5B20E9c45380d4981D",
+    "timelockProposer": "0x13b29A0f6Fed4bBBA372ff5B20E9c45380d4981D",
+    "timelockExecutor": "0x13b29A0f6Fed4bBBA372ff5B20E9c45380d4981D"
+  },
+  "configuration": {
+    "collateralFactor": "60%",
+    "liquidationThreshold": "80%",
+    "timelockDelay": "1 hour",
+    "initialLiquidity": "1,000,000 tokens"
+  }
+}

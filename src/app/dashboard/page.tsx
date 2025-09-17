@@ -6,7 +6,7 @@ import { LoanList } from "@/components/loan-list"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ScoreCard } from "@/components/score-card"
-import { useAccountData, useTokenBalances, usePrices, formatTokenAmount, formatUSD } from "@/hooks/useContract"
+import { useAccountData, useTokenBalances, usePrices, formatTokenAmount, formatUSD, useUsdcDecimals } from "@/hooks/useContract"
 import { DebugPanel } from "@/components/debug-panel"
 
 import WalletConnection from "@/app/walletConnection"
@@ -16,10 +16,11 @@ export default function DashboardPage() {
   const { accountData, hasAccount, isLoading } = useAccountData()
   const { wethBalance, usdcBalance } = useTokenBalances()
   const { collateralPrice } = usePrices()
+  const usdcDecimals = useUsdcDecimals() || 6
 
   // Calculate real values from contract data
   const collateralAmount = accountData ? Number(formatTokenAmount(accountData[0], 18)) : 0 // collateralRaw
-  const debtAmount = accountData ? Number(formatTokenAmount(accountData[1], 6)) : 0 // debtRaw
+  const debtAmount = accountData ? Number(formatTokenAmount(accountData[1], usdcDecimals)) : 0 // debtRaw
   const collateralValueUSD = accountData ? Number(formatTokenAmount(accountData[2], 18)) : 0 // collateralValue1e18
   const healthFactor = accountData ? Number(formatTokenAmount(accountData[5], 18)) : 0 // healthFactor1e18
   
@@ -64,7 +65,7 @@ export default function DashboardPage() {
           />
           <MetricCard 
             title="Health Factor" 
-            value={isLoading ? "Loading..." : healthFactor > 0 ? (healthFactor / 1e18).toFixed(2) : "N/A"} 
+            value={isLoading ? "Loading..." : healthFactor > 0 ? healthFactor.toFixed(2) : "N/A"} 
             subtext="Above 1.0 is safe" 
           />
         </div>
