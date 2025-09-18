@@ -20,12 +20,12 @@ export default function DashboardPage() {
   const collateralRaw = accountData ? accountData[0] : 0n
   const debtRaw = accountData ? accountData[1] : 0n
   const collateralValueUSD = accountData ? Number(formatTokenAmount(accountData[2], 18)) : 0
-  const debtValueUSD = accountData ? Number(formatTokenAmount(accountData[3], 18)) : 0
-  // Some deployments may return debt value with 6 decimals instead of 18. Fallback safely.
-  const debtValueUSDSafe = debtValueUSD > 0
-    ? debtValueUSD
-    : (accountData ? Number(formatTokenAmount(accountData[1], 6)) : 0)
-  const healthFactor = accountData ? Number(formatTokenAmount(accountData[5], 18)) : 0
+  // Robust debt parsing with 18-decimal primary, 6-decimal fallback
+  const parsedDebt18 = accountData ? Number(formatTokenAmount(accountData[3], 18)) : 0
+  const parsedDebt6 = accountData ? Number(formatTokenAmount(accountData[1], 6)) : 0
+  const debtValueUSD = parsedDebt18 > 0 ? parsedDebt18 : parsedDebt6
+  const healthRaw = accountData ? Number(formatTokenAmount(accountData[5], 18)) : 0
+  const healthFactor = debtValueUSD === 0 ? Infinity : Math.min(healthRaw, 1e6)
   
   // Check if debt is effectively zero
   const isDebtZero = debtRaw ? isDebtEffectivelyZero(debtRaw, 6) : true
@@ -102,7 +102,7 @@ export default function DashboardPage() {
               <div>
                 <p className="text-sm text-slate-400">Health Factor</p>
                 <p className={`text-2xl font-bold ${isHealthy ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {accountLoading ? "Loading..." : healthFactor > 0 ? healthFactor.toFixed(2) : "N/A"}
+                  {accountLoading ? "Loading..." : (healthFactor === Infinity ? '∞' : healthFactor > 0 ? healthFactor.toFixed(2) : "N/A")}
                 </p>
                 <p className={`text-xs mt-1 ${isHealthy ? 'text-emerald-400' : 'text-red-400'}`}>
                   {healthStatus}
@@ -147,7 +147,7 @@ export default function DashboardPage() {
                   <span className="text-slate-400">Loan-to-Value (LTV)</span>
                   <span className="text-emerald-400">
                     {accountLoading ? "Loading..." : (() => {
-                      const raw = collateralValueUSD > 0 ? (debtValueUSDSafe / collateralValueUSD) * 100 : 0
+                      const raw = collateralValueUSD > 0 ? (debtValueUSD / collateralValueUSD) * 100 : 0
                       const safe = Number.isFinite(raw) && !Number.isNaN(raw) ? raw : 0
                       return `${safe.toFixed(1)}%`
                     })()}
@@ -157,7 +157,7 @@ export default function DashboardPage() {
                   <div 
                     className="h-3 bg-gradient-to-r from-red-500 to-red-400 rounded-full shadow-lg shadow-red-500/25" 
                     style={{ 
-                      width: `${(() => { const raw = collateralValueUSD > 0 ? (debtValueUSDSafe / collateralValueUSD) * 100 : 0; const safe = Number.isFinite(raw) && !Number.isNaN(raw) ? raw : 0; return Math.min(100, Math.max(0, safe)); })()}%` 
+                      width: `${(() => { const raw = collateralValueUSD > 0 ? (debtValueUSD / collateralValueUSD) * 100 : 0; const safe = Number.isFinite(raw) && !Number.isNaN(raw) ? raw : 0; return Math.min(100, Math.max(0, safe)); })()}%` 
                     }} 
                   />
                 </div>

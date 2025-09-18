@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   description: "DeFi lending on Aegis Network",
  
   icons: {
-    icon: "/aegis geminai logo.png",
+    icon: "/public/aegis geminai logo.png",
     // shortcut: "/aegis geminai logo.png",
     // apple: "/aegis geminai logo.png",
   },

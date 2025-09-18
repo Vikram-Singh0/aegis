@@ -1,10 +1,26 @@
+"use client"
 import { SiteHeader } from "@/components/site-header"
+import { Button } from "@/components/ui/button"
+import { useActiveAccount } from "thirdweb/react"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+
 
 export default function SettingsPage() {
+  const account = useActiveAccount()
+  if (!account?.address) {
+    return (
+      <main className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-950 to-gray-900">
+        <SiteHeader />
+        <section className="mx-auto max-w-3xl px-4 py-8 space-y-6">
+          <h1 className="text-3xl font-bold text-white">Connect Wallet</h1>
+          <p className="text-slate-300">Please connect your wallet to access settings.</p>
+          <Button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">Connect Wallet</Button>
+        </section>
+      </main>
+    )
+  }
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-950 to-gray-900">
       <SiteHeader />

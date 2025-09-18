@@ -1,3 +1,4 @@
+import Link from "next/link"
 export function SiteFooter() {
   return (
     <footer className="glass-card border-t border-gray-500/20 bg-transparent backdrop-blur-md">
@@ -5,7 +6,7 @@ export function SiteFooter() {
         <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
           <div className="text-center md:text-left">
             <p className="text-sm text-foreground">© 2024 Aegis. All rights reserved.</p>
-            <p className="text-xs text-muted-foreground mt-1">Made with ❤️ by me</p>
+            <p className="text-sm text-foreground mt-1">Made By<Link href="https://github.com/Vikram-Singh0" className="text-blue-400 hover:text-blue-600 transition-colors">Vikram</Link></p>
           </div>
           <div className="flex gap-6 text-sm">
             <a href="/legal" className="text-muted-foreground hover:text-blue-400 transition-colors">

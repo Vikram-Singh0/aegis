@@ -18,8 +18,13 @@ export default function AdminPage() {
 
   // Calculate real values from contract data with error handling
   const collateralValueUSD = accountData && accountData[2] ? Number(formatTokenAmount(accountData[2], 18)) : 0
-  const debtValueUSD = accountData && accountData[3] ? Number(formatTokenAmount(accountData[3], 18)) : 0
-  const healthFactor = accountData && accountData[5] ? Number(formatTokenAmount(accountData[5], 18)) : 0
+  // Robust debt parsing with 18-decimal primary, 6-decimal fallback
+  const parsedDebt18 = accountData && accountData[3] ? Number(formatTokenAmount(accountData[3], 18)) : 0
+  const parsedDebt6 = accountData && accountData[1] ? Number(formatTokenAmount(accountData[1], 6)) : 0
+  const debtValueUSD = parsedDebt18 > 0 ? parsedDebt18 : parsedDebt6
+  // Cap health factor to avoid giant numbers when debt is zero
+  const rawHealthFactor = accountData && accountData[5] ? Number(formatTokenAmount(accountData[5], 18)) : 0
+  const healthFactor = Number.isFinite(rawHealthFactor) ? Math.min(rawHealthFactor, 1e6) : 0
   
   // Token balances with error handling
   const wethBalanceFormatted = wethBalance ? Number(formatTokenAmount(wethBalance, 18)) : 0

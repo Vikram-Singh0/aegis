@@ -88,9 +88,16 @@ export function useCalculations(): CalculationResults {
     const collateralRaw = accountData[0];
     const debtRaw = accountData[1];
     const collateralValueUSD = Number(formatTokenAmount(accountData[2], 18));
-    const debtValueUSD = Number(formatTokenAmount(accountData[3], 18));
+    // Some deployments return debt value with 18 decimals (USD 1e18) while others may
+    // only store raw USDC debt with 6 decimals. Fallback safely to avoid showing 0.
+    const parsedDebt18 = Number(formatTokenAmount(accountData[3], 18));
+    const parsedDebt6 = Number(formatTokenAmount(accountData[1], 6));
+    const debtValueUSD = parsedDebt18 > 0 ? parsedDebt18 : parsedDebt6;
     const maxBorrowDebtRaw = accountData[4];
-    const healthFactor = Number(formatTokenAmount(accountData[5], 18));
+    // Health factor is 1e18 fixed-point. If debt is zero it can be extremely large.
+    // Cap for display/derived calculations to avoid UI overflow while preserving semantics.
+    const rawHealthFactor = Number(formatTokenAmount(accountData[5], 18));
+    const healthFactor = Number.isFinite(rawHealthFactor) ? Math.min(rawHealthFactor, 1e6) : 0;
 
     // Calculate LTV (Loan-to-Value) as percentage
     const ltv = collateralValueUSD > 0 ? (debtValueUSD / collateralValueUSD) * 100 : 0;
