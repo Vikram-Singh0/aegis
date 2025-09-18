@@ -4,126 +4,123 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #ffffff;
-  --foreground: #010101;
-  /* darkest grey from logo */
+  /* Updated to dark black/blue DeFi theme with green/red accents */
+  --background: oklch(1 0 0); /* very dark black */
+  --foreground: oklch(0.145 0 0); /* light text */
 
-  --card: #cacaca;
-  /* light grey from logo */
-  --card-foreground: #010101;
+  --card: oklch(1 0 0); /* dark blue-grey cards */
+  --card-foreground: oklch(0.145 0 0);
 
-  --popover: #ffffff;
-  --popover-foreground: #010101;
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
 
-  --primary: #333333;
-  /* dark grey from logo */
-  --primary-foreground: #ffffff;
+  /* Primary blue for main actions */
+  --primary: oklch(0.205 0 0); /* professional blue */
+  --primary-foreground: oklch(0.985 0 0);
 
-  --secondary: #939393;
-  /* medium grey from logo */
-  --secondary-foreground: #ffffff;
+  /* Secondary darker blue */
+  --secondary: oklch(0.97 0 0); /* darker blue */
+  --secondary-foreground: oklch(0.205 0 0);
 
-  --muted: #cacaca;
-  /* light grey from logo */
-  --muted-foreground: #333333;
+  --muted: oklch(0.97 0 0); /* dark muted */
+  --muted-foreground: oklch(0.556 0 0);
 
-  --accent: #939393;
-  /* medium grey accent */
-  --accent-foreground: #ffffff;
+  /* Accent blue for highlights */
+  --accent: oklch(0.97 0 0); /* lighter blue accent */
+  --accent-foreground: oklch(0.205 0 0);
 
-  --destructive: #dc2626;
-  /* keep red for errors */
-  --destructive-foreground: #ffffff;
+  --destructive: oklch(0.577 0.245 27.325); /* red for losses/danger */
+  --destructive-foreground: oklch(0.577 0.245 27.325);
 
-  --border: #939393;
-  /* medium grey for borders */
-  --input: #ffffff;
-  --ring: #333333;
-  /* dark grey focus ring */
+  /* Success green for profits/gains */
+  --success: oklch(0.6 0.118 184.704); /* green for positive values */
+  --success-foreground: oklch(0.985 0 0);
 
-  /* Updated chart colors to use logo palette */
-  --chart-1: #333333;
-  --chart-2: #939393;
-  --chart-3: #cacaca;
-  --chart-4: #010101;
-  --chart-5: #ffffff;
+  /* Warning orange for caution */
+  --warning: oklch(0.828 0.189 84.429); /* orange for warnings */
+  --warning-foreground: oklch(0.985 0 0);
 
-  --radius: 0.5rem;
+  --border: oklch(0.922 0 0); /* dark borders */
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0); /* blue focus ring */
 
-  /* Updated sidebar tokens with logo colors */
-  --sidebar: #cacaca;
-  --sidebar-foreground: #010101;
-  --sidebar-primary: #333333;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #939393;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #939393;
-  --sidebar-ring: #333333;
+  /* DeFi-specific chart colors */
+  --chart-1: oklch(0.646 0.222 41.116); /* blue */
+  --chart-2: oklch(0.6 0.118 184.704); /* green */
+  --chart-3: oklch(0.398 0.07 227.392); /* red */
+  --chart-4: oklch(0.828 0.189 84.429); /* orange */
+  --chart-5: oklch(0.769 0.188 70.08); /* purple */
+
+  --radius: 0.625rem; /* slightly more rounded for modern look */
+
+  /* Glassmorphism variables */
+  --glass-bg: rgba(17, 24, 39, 0.8);
+  --glass-border: rgba(59, 130, 246, 0.2);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+  /* Gradient variables for modern DeFi look */
+  --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --gradient-danger: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  --gradient-card: linear-gradient(135deg, rgba(17, 24, 39, 0.9) 0%, rgba(31, 41, 55, 0.9) 100%);
+
+  /* Sidebar colors */
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
 }
 
 .dark {
-  --background: #010101;
-  /* darkest from logo */
-  --foreground: #cacaca;
-  /* lightest from logo */
-
-  --card: #333333;
-  /* dark grey cards */
-  --card-foreground: #cacaca;
-
-  --popover: #333333;
-  --popover-foreground: #cacaca;
-
-  --primary: #cacaca;
-  /* light grey primary in dark mode */
-  --primary-foreground: #010101;
-
-  --secondary: #939393;
-  /* medium grey stays same */
-  --secondary-foreground: #010101;
-
-  --muted: #333333;
-  /* dark grey muted */
-  --muted-foreground: #939393;
-
-  --accent: #939393;
-  --accent-foreground: #010101;
-
-  --destructive: #ef4444;
-  /* slightly brighter red for dark mode */
-  --destructive-foreground: #ffffff;
-
-  --border: #333333;
-  /* dark grey borders */
-  --input: #333333;
-  --ring: #939393;
-  /* medium grey focus ring */
-
-  --chart-1: #cacaca;
-  --chart-2: #939393;
-  --chart-3: #333333;
-  --chart-4: #010101;
-  --chart-5: #ffffff;
-
-  --sidebar: #333333;
-  --sidebar-foreground: #cacaca;
-  --sidebar-primary: #cacaca;
-  --sidebar-primary-foreground: #010101;
-  --sidebar-accent: #939393;
-  --sidebar-accent-foreground: #010101;
-  --sidebar-border: #333333;
-  --sidebar-ring: #939393;
+  /* Dark mode uses same colors since we're already dark-first */
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.145 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.396 0.141 25.723);
+  --destructive-foreground: oklch(0.637 0.237 25.331);
+  --success: oklch(0.696 0.17 162.48);
+  --warning: oklch(0.627 0.265 303.9);
+  --border: oklch(0.269 0 0);
+  --input: oklch(0.269 0 0);
+  --ring: oklch(0.439 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.269 0 0);
+  --sidebar-ring: oklch(0.439 0 0);
 }
 
 @theme inline {
   --font-sans: var(--font-open-sans);
-  /* body = Open Sans */
   --font-mono: var(--font-mono-fallback);
-  /* generic mono fallback */
 
   --font-mono-fallback: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
     monospace;
 
+  /* Added success and warning color tokens */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -140,6 +137,10 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -166,109 +167,100 @@
   * {
     @apply border-border outline-ring/50;
   }
-
   body {
     @apply bg-background text-foreground font-sans;
-  }
-
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    font-family: var(--font-work-sans), var(--font-sans);
-    font-weight: 700;
   }
 }
 
 @layer utilities {
-
-  /* Respect reduced motion preferences */
+  /* Added DeFi-specific glassmorphism and modern effects */
   @media (prefers-reduced-motion: no-preference) {
-    @keyframes a-fade {
-      from {
-        opacity: 0;
+    @keyframes pulse-glow {
+      0%,
+      100% {
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
       }
-
-      to {
-        opacity: 1;
+      50% {
+        box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
       }
     }
 
-    @keyframes a-slide-up {
+    @keyframes slide-up-fade {
       from {
         opacity: 0;
-        transform: translateY(6px);
+        transform: translateY(20px);
       }
-
       to {
         opacity: 1;
         transform: translateY(0);
       }
     }
 
-    @keyframes a-slide-right {
-      from {
-        opacity: 0;
-        transform: translateX(-6px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
+    .glass-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
     }
 
-    .a-fade {
-      opacity: 0;
-      animation: a-fade 400ms ease-out forwards;
+    .glow-primary {
+      animation: pulse-glow 2s ease-in-out infinite;
     }
 
-    .a-slide-up {
-      opacity: 0;
-      transform: translateY(6px);
-      animation: a-slide-up 500ms ease-out forwards;
+    .slide-up-fade {
+      animation: slide-up-fade 0.6s ease-out forwards;
     }
 
-    .a-slide-right {
-      opacity: 0;
-      transform: translateX(-6px);
-      animation: a-slide-right 500ms ease-out forwards;
+    .hover-lift {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* Gentle hover/focus lift for cards/buttons */
-    .card-hover {
-      transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
-      will-change: transform;
+    .hover-lift:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
     }
 
-    .card-hover:hover,
-    .card-hover:focus-visible {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 18px 0 color-mix(in oklab, var(--color-foreground) 12%, transparent);
-      border-color: color-mix(in oklab, var(--color-border) 65%, var(--color-primary) 35%);
+    /* Health factor color utilities */
+    .health-excellent {
+      @apply text-emerald-400 bg-emerald-500/10 border-emerald-500/20;
+    }
+    .health-good {
+      @apply text-green-400 bg-green-500/10 border-green-500/20;
+    }
+    .health-warning {
+      @apply text-yellow-400 bg-yellow-500/10 border-yellow-500/20;
+    }
+    .health-danger {
+      @apply text-red-400 bg-red-500/10 border-red-500/20;
+    }
+    .health-critical {
+      @apply text-red-500 bg-red-600/20 border-red-600/30;
     }
 
-    /* Utility for focus rings when not using shadcn focus classes */
-    .focus-ring:focus-visible {
-      outline: 2px solid var(--color-ring);
-      outline-offset: 2px;
+    /* Money value colors */
+    .money-positive {
+      @apply text-emerald-400;
     }
+    .money-negative {
+      @apply text-red-400;
+    }
+    .money-neutral {
+      @apply text-slate-300;
+    }
+  }
 
-    /* Glass & glow helpers */
-    .glass {
-      backdrop-filter: blur(12px);
-      background-color: color-mix(in oklab, var(--color-card) 55%, transparent);
-      border-color: color-mix(in oklab, var(--color-border) 60%, transparent);
-    }
-
-    .glow {
-      box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-ring) 22%, transparent), 0 10px 30px -10px color-mix(in oklab, var(--color-primary) 25%, transparent);
-    }
-
-    .text-glow {
-      text-shadow: 0 0 16px color-mix(in oklab, var(--color-primary) 35%, transparent);
-    }
+  /* Gradient backgrounds */
+  .bg-gradient-primary {
+    background: var(--gradient-primary);
+  }
+  .bg-gradient-success {
+    background: var(--gradient-success);
+  }
+  .bg-gradient-danger {
+    background: var(--gradient-danger);
+  }
+  .bg-gradient-card {
+    background: var(--gradient-card);
   }
 }

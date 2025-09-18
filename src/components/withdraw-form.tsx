@@ -20,7 +20,7 @@ export function WithdrawForm() {
   // Get real collateral amount from contract
   const usdcDecimals = useUsdcDecimals() || 6
   const currentCollateral = accountData ? Number(formatTokenAmount(accountData[0], 18)) : 0 // collateralRaw
-  const currentDebt = accountData ? Number(formatTokenAmount(accountData[1], usdcDecimals)) : 0 // debtRaw
+  const currentDebt = accountData ? Number(formatTokenAmount(accountData[3], 18)) : 0 // debtValue1e18 is already scaled
   const healthFactor = accountData ? Number(formatTokenAmount(accountData[5], 18)) : 0 // healthFactor1e18
   
   const after = Math.max(0, currentCollateral - Number(amount || 0))
@@ -42,14 +42,14 @@ export function WithdrawForm() {
 
   if (!hasAccount) {
     return (
-      <Card className="border-neutral-200 bg-white text-black">
+      <Card className="glass-card border-amber-500/30 bg-amber-500/5">
         <CardHeader>
-          <CardTitle>Withdraw Collateral</CardTitle>
+          <CardTitle className="text-amber-400">Withdraw Collateral</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Alert className="border-neutral-300 bg-white">
-            <AlertTitle>Connect Wallet</AlertTitle>
-            <AlertDescription>
+          <Alert className="border-amber-500/30 bg-amber-500/10">
+            <AlertTitle className="text-amber-400">Connect Wallet</AlertTitle>
+            <AlertDescription className="text-amber-200/80">
               Please connect your wallet to manage your collateral withdrawals.
             </AlertDescription>
           </Alert>
@@ -62,14 +62,14 @@ export function WithdrawForm() {
   }
 
   return (
-    <Card className="border-neutral-200 bg-white text-black">
+    <Card className="glass-card border-blue-500/20 bg-slate-800/50 text-slate-100">
       <CardHeader>
-        <CardTitle>Withdraw Collateral</CardTitle>
+        <CardTitle className="text-slate-100">Withdraw Collateral</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Alert className="border-neutral-300 bg-white">
-          <AlertTitle>Account Status</AlertTitle>
-          <AlertDescription>
+        <Alert className="border-blue-500/30 bg-blue-500/10">
+          <AlertTitle className="text-blue-400">Account Status</AlertTitle>
+          <AlertDescription className="text-blue-200/80">
             Current Collateral: {formatTokenAmount(BigInt(Math.floor(currentCollateral * 1e18)), 18)} WETH | 
             Current Debt: ${currentDebt.toLocaleString()} | 
             Health Factor: {healthFactor > 0 ? healthFactor.toFixed(2) : "N/A"}
@@ -77,34 +77,34 @@ export function WithdrawForm() {
         </Alert>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="withdraw-amount">Withdraw Amount (WETH)</Label>
+            <Label htmlFor="withdraw-amount" className="text-slate-300">Withdraw Amount (WETH)</Label>
             <Input
               id="withdraw-amount"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="border-neutral-300"
+              className="bg-slate-700/50 border-slate-600 text-slate-100 placeholder:text-slate-400"
               inputMode="decimal"
               disabled={isWithdrawing}
             />
-            <p className="text-xs text-neutral-600">
+            <p className="text-xs text-slate-400">
               Remaining after withdrawal: {formatTokenAmount(BigInt(Math.floor(after * 1e18)), 18)} WETH | 
               Max: {formatTokenAmount(BigInt(Math.floor(currentCollateral * 1e18)), 18)} WETH
             </p>
           </div>
           <div className="space-y-2">
-            <Label>Summary</Label>
-            <div className="rounded-md border border-neutral-300 p-3 text-sm">
+            <Label className="text-slate-300">Summary</Label>
+            <div className="rounded-lg bg-slate-700/30 border border-slate-600 p-3 text-sm">
               <div className="flex items-center justify-between">
-                <span>Current collateral</span>
-                <span className="font-medium">{formatTokenAmount(BigInt(Math.floor(currentCollateral * 1e18)), 18)} WETH</span>
+                <span className="text-slate-400">Current collateral</span>
+                <span className="font-medium text-slate-300">{formatTokenAmount(BigInt(Math.floor(currentCollateral * 1e18)), 18)} WETH</span>
               </div>
               <div className="mt-2 flex items-center justify-between">
-                <span>After withdrawal</span>
-                <span className="font-medium">{formatTokenAmount(BigInt(Math.floor(after * 1e18)), 18)} WETH</span>
+                <span className="text-slate-400">After withdrawal</span>
+                <span className="font-medium text-slate-300">{formatTokenAmount(BigInt(Math.floor(after * 1e18)), 18)} WETH</span>
               </div>
               <div className="mt-2 flex items-center justify-between">
-                <span>Health factor impact</span>
-                <span className="font-medium">
+                <span className="text-slate-400">Health factor impact</span>
+                <span className="font-medium text-slate-300">
                   {after < currentCollateral * 0.5 ? "Significant" : "Moderate"}
                 </span>
               </div>
@@ -114,7 +114,7 @@ export function WithdrawForm() {
       </CardContent>
       <CardFooter className="flex justify-end">
         <Button 
-          className="bg-black text-white hover:bg-neutral-900"
+          className="bg-gradient-primary hover:opacity-90 text-white"
           onClick={handleWithdraw}
           disabled={isWithdrawing || !amount || Number(amount) <= 0 || Number(amount) > currentCollateral}
         >

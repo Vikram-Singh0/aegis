@@ -6,12 +6,13 @@ import { Suspense } from "react"
 import { SiteFooter } from "@/components/site-footer"
 import {ThirdwebProvider} from "thirdweb/react"
 import { Toaster } from "sonner"
+import { client } from "./client"
 import "./globals.css"
 
 export const metadata: Metadata = {
   title: "Aegis",
   description: "DeFi lending on Aegis Network",
-  generator: "v0.app",
+ 
   icons: {
     icon: "/aegis geminai logo.png",
     // shortcut: "/aegis geminai logo.png",

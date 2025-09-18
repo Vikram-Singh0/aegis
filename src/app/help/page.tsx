@@ -16,23 +16,28 @@ const faqs = [
   },
   {
     q: "Which network is this on?",
-    a: "Currently Aegis supports Somnia Network.But we are expecting for multiple networks in future.",
+    a: "Aegis Network. Ensure your wallet is configured accordingly (mock for this design).",
   },
 ]
 
 export default function HelpPage() {
   return (
-    <main className="min-h-screen bg-white text-black">
+    <main className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-950 to-gray-900">
       <SiteHeader />
       <section className="mx-auto max-w-3xl px-4 py-8 space-y-6">
-        <h1 className="text-2xl font-semibold">FAQ & Help</h1>
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+          FAQ & Help
+        </h1>
         <div className="grid gap-3">
           {faqs.map((f, i) => (
-            <Card key={i} className="border-neutral-200 bg-white text-black">
+            <Card
+              key={i}
+              className="bg-white/5 backdrop-blur-xl border-white/10 text-white shadow-2xl hover:bg-white/10 transition-all duration-300"
+            >
               <CardHeader>
-                <CardTitle className="text-base">{f.q}</CardTitle>
+                <CardTitle className="text-base text-white">{f.q}</CardTitle>
               </CardHeader>
-              <CardContent className="text-sm text-neutral-700">{f.a}</CardContent>
+              <CardContent className="text-sm text-gray-300">{f.a}</CardContent>
             </Card>
           ))}
         </div>

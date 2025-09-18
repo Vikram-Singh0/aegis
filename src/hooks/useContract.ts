@@ -4,7 +4,7 @@ import { useReadContract, useSendTransaction, useActiveAccount } from "thirdweb/
 import { getContract, prepareContractCall, defineChain, waitForReceipt } from "thirdweb";
 import { client } from "@/app/client";
 import { CONTRACT_ADDRESSES, COLLATERAL_MANAGER_ABI, ERC20_ABI } from "@/lib/contracts";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { toast } from "sonner";
 
 // Define the chain (Somnia testnet)
@@ -52,7 +52,8 @@ export function useAccountData() {
     params: [account?.address || "0x0000000000000000000000000000000000000000"],
     queryOptions: {
       enabled: !!account?.address,
-      refetchInterval: 10000, // Refetch every 10 seconds
+      refetchInterval: 30000, // Refetch every 30 seconds
+      retry: 3,
     },
   });
 
@@ -60,7 +61,6 @@ export function useAccountData() {
     setRefreshKey(prev => prev + 1);
     try {
       await refetch();
-      console.log("Account data refreshed successfully");
     } catch (error) {
       console.error("Failed to refresh account data:", error);
     }
@@ -80,23 +80,25 @@ export function useTokenBalances() {
   const account = useActiveAccount();
   const [refreshKey, setRefreshKey] = useState(0);
   
-  const { data: wethBalance, refetch: refetchWeth } = useReadContract({
+  const { data: wethBalance, refetch: refetchWeth, error: wethError } = useReadContract({
     contract: wethContract,
     method: "balanceOf",
     params: [account?.address || "0x0000000000000000000000000000000000000000"],
     queryOptions: {
       enabled: !!account?.address,
-      refetchInterval: 10000,
+      refetchInterval: 30000,
+      retry: 3,
     },
   });
 
-  const { data: usdcBalance, refetch: refetchUsdc } = useReadContract({
+  const { data: usdcBalance, refetch: refetchUsdc, error: usdcError } = useReadContract({
     contract: usdcContract,
     method: "balanceOf",
     params: [account?.address || "0x0000000000000000000000000000000000000000"],
     queryOptions: {
       enabled: !!account?.address,
-      refetchInterval: 10000,
+      refetchInterval: 30000,
+      retry: 3,
     },
   });
 
@@ -104,7 +106,6 @@ export function useTokenBalances() {
     setRefreshKey(prev => prev + 1);
     try {
       await Promise.all([refetchWeth(), refetchUsdc()]);
-      console.log("Token balances refreshed successfully");
     } catch (error) {
       console.error("Failed to refresh token balances:", error);
     }
@@ -114,30 +115,34 @@ export function useTokenBalances() {
     wethBalance: wethBalance || 0n,
     usdcBalance: usdcBalance || 0n,
     refreshBalances,
+    error: wethError || usdcError,
   };
 }
 
 // Hook for getting current prices
 export function usePrices() {
-  const { data: collateralPrice } = useReadContract({
+  const { data: collateralPrice, error: collateralPriceError } = useReadContract({
     contract: collateralManagerContract,
     method: "getCurrentCollateralPrice",
     queryOptions: {
-      refetchInterval: 30000, // Refetch every 30 seconds
+      refetchInterval: 60000, // Refetch every 60 seconds
+      retry: 3,
     },
   });
 
-  const { data: debtPrice } = useReadContract({
+  const { data: debtPrice, error: debtPriceError } = useReadContract({
     contract: collateralManagerContract,
     method: "getCurrentDebtPrice",
     queryOptions: {
-      refetchInterval: 30000,
+      refetchInterval: 60000,
+      retry: 3,
     },
   });
 
   return {
     collateralPrice: collateralPrice || 0n,
     debtPrice: debtPrice || 0n,
+    error: collateralPriceError || debtPriceError,
   };
 }
 
@@ -167,12 +172,15 @@ export function useContractActions() {
   const account = useActiveAccount();
   const { refreshAccountData } = useAccountData();
   const { refreshBalances } = useTokenBalances();
+  
+  // Local state for individual transaction loading states
+  const [isDepositing, setIsDepositing] = useState(false);
+  const [isBorrowing, setIsBorrowing] = useState(false);
+  const [isRepaying, setIsRepaying] = useState(false);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
 
   // Helper function to check contract connection
   const checkContractConnection = () => {
-    console.log("Contract addresses:", CONTRACT_ADDRESSES);
-    console.log("Account address:", account?.address);
-    console.log("Chain ID:", somniaTestnet.id);
     return !!account?.address;
   };
 
@@ -183,7 +191,7 @@ export function useContractActions() {
       return;
     }
 
-    console.log("Starting deposit collateral transaction with amount:", amount.toString());
+    setIsDepositing(true);
     try {
       // First approve the contract to spend WETH
       const approveCall = prepareContractCall({
@@ -206,7 +214,6 @@ export function useContractActions() {
 
       const { transactionHash: depositHash } = await sendTransactionAsync(depositCall);
       const depositReceipt = await waitForReceipt({ client, chain: somniaTestnet, transactionHash: depositHash });
-      console.log("Deposit receipt:", depositReceipt);
       toast.success("Collateral deposited successfully!");
       
       // Refresh data after successful transaction
@@ -215,6 +222,8 @@ export function useContractActions() {
     } catch (err: any) {
       console.error("Deposit error:", err);
       toast.error(err.message || "Failed to deposit collateral");
+    } finally {
+      setIsDepositing(false);
     }
   };
 
@@ -225,7 +234,7 @@ export function useContractActions() {
       return;
     }
 
-    console.log("Starting borrow transaction with amount:", amount.toString());
+    setIsBorrowing(true);
     try {
       const borrowCall = prepareContractCall({
         contract: collateralManagerContract,
@@ -235,7 +244,6 @@ export function useContractActions() {
 
       const { transactionHash: borrowHash } = await sendTransactionAsync(borrowCall);
       const borrowReceipt = await waitForReceipt({ client, chain: somniaTestnet, transactionHash: borrowHash });
-      console.log("Borrow receipt:", borrowReceipt);
       toast.success("Borrowed successfully!");
       
       // Refresh data after successful transaction
@@ -244,6 +252,8 @@ export function useContractActions() {
     } catch (err: any) {
       console.error("Borrow error:", err);
       toast.error(err.message || "Failed to borrow");
+    } finally {
+      setIsBorrowing(false);
     }
   };
 
@@ -254,7 +264,7 @@ export function useContractActions() {
       return;
     }
 
-    console.log("Starting repay transaction with amount:", amount.toString());
+    setIsRepaying(true);
     try {
       // First approve the contract to spend USDC
       const approveCall = prepareContractCall({
@@ -277,7 +287,6 @@ export function useContractActions() {
 
       const { transactionHash: repayHash } = await sendTransactionAsync(repayCall);
       const repayReceipt = await waitForReceipt({ client, chain: somniaTestnet, transactionHash: repayHash });
-      console.log("Repay receipt:", repayReceipt);
       toast.success("Repaid successfully!");
       
       // Refresh data after successful transaction
@@ -286,6 +295,8 @@ export function useContractActions() {
     } catch (err: any) {
       console.error("Repay error:", err);
       toast.error(err.message || "Failed to repay");
+    } finally {
+      setIsRepaying(false);
     }
   };
 
@@ -296,7 +307,7 @@ export function useContractActions() {
       return;
     }
 
-    console.log("Starting withdraw collateral transaction with amount:", amount.toString());
+    setIsWithdrawing(true);
     try {
       const withdrawCall = prepareContractCall({
         contract: collateralManagerContract,
@@ -306,7 +317,6 @@ export function useContractActions() {
 
       const { transactionHash: withdrawHash } = await sendTransactionAsync(withdrawCall);
       const withdrawReceipt = await waitForReceipt({ client, chain: somniaTestnet, transactionHash: withdrawHash });
-      console.log("Withdraw receipt:", withdrawReceipt);
       toast.success("Collateral withdrawn successfully!");
       
       // Refresh data after successful transaction
@@ -315,6 +325,8 @@ export function useContractActions() {
     } catch (err: any) {
       console.error("Withdraw error:", err);
       toast.error(err.message || "Failed to withdraw collateral");
+    } finally {
+      setIsWithdrawing(false);
     }
   };
 
@@ -324,6 +336,10 @@ export function useContractActions() {
     repay,
     withdrawCollateral,
     isPending,
+    isDepositing,
+    isBorrowing,
+    isRepaying,
+    isWithdrawing,
     error,
   };
 }
@@ -346,6 +362,51 @@ export function formatTokenAmount(amount: bigint, decimals: number = 18): string
   }
   
   return `${wholePart}.${trimmedFractional}`;
+}
+
+// Enhanced formatting function for debt amounts that shows more precision for small amounts
+export function formatDebtAmount(amount: bigint, decimals: number = 6): string {
+  const divisor = 10n ** BigInt(decimals);
+  const wholePart = amount / divisor;
+  const fractionalPart = amount % divisor;
+  
+  if (fractionalPart === 0n) {
+    return wholePart.toString();
+  }
+  
+  const fractionalStr = fractionalPart.toString().padStart(decimals, '0');
+  
+  // For very small amounts, show more decimal places
+  const amountNumber = Number(formatTokenAmount(amount, decimals));
+  if (amountNumber < 0.01) {
+    // Show up to 6 decimal places for amounts less than 1 cent
+    const trimmedFractional = fractionalStr.replace(/0+$/, '');
+    if (trimmedFractional === '') {
+      return wholePart.toString();
+    }
+    return `${wholePart}.${trimmedFractional}`;
+  } else if (amountNumber < 1) {
+    // Show up to 4 decimal places for amounts less than $1
+    const trimmedFractional = fractionalStr.substring(0, 4).replace(/0+$/, '');
+    if (trimmedFractional === '') {
+      return wholePart.toString();
+    }
+    return `${wholePart}.${trimmedFractional}`;
+  } else {
+    // Show 2 decimal places for larger amounts
+    const trimmedFractional = fractionalStr.substring(0, 2).replace(/0+$/, '');
+    if (trimmedFractional === '') {
+      return wholePart.toString();
+    }
+    return `${wholePart}.${trimmedFractional}`;
+  }
+}
+
+// Check if a debt amount is effectively zero (below dust threshold)
+export function isDebtEffectivelyZero(amount: bigint, decimals: number = 6): boolean {
+  // Consider amounts less than 0.000001 (1 micro-unit) as effectively zero
+  const dustThreshold = 10n ** BigInt(decimals - 6); // 0.000001 for 6 decimals
+  return amount < dustThreshold;
 }
 
 export function parseTokenAmount(amount: string, decimals: number = 18): bigint {

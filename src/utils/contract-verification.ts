@@ -96,7 +96,7 @@ export async function testContractInteraction(userAddress: string) {
     });
     
     const accountData = await accountDataCall;
-    console.log("Account data retrieved:", accountData);
+    // Account data retrieved successfully
     
     return {
       success: true,
